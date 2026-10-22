@@ -1,0 +1,2144 @@
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>
+  eruda.init();
+</script>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GitHub Code Editor — v3.0.0</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    /* ── CodeMirror VS Code Dark+ Theme ── */
+    .cm-s-vscode-dark.CodeMirror {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      font-family: 'Consolas', 'Courier New', monospace;
+      line-height: 1.5em;
+      height: 100%
+    }
+
+    .cm-s-vscode-dark .CodeMirror-gutters {
+      background: #1e1e1e;
+      border-right: none
+    }
+
+    .cm-s-vscode-dark .CodeMirror-linenumber {
+      color: #858585;
+      padding: 0 10px 0 6px;
+      min-width: 36px
+    }
+
+    .cm-s-vscode-dark .CodeMirror-cursor {
+      border-left: 2px solid #aeafad
+    }
+
+    .cm-s-vscode-dark .CodeMirror-selected,
+    .cm-s-vscode-dark .CodeMirror-focused .CodeMirror-selected {
+      background: #264f78
+    }
+
+    .cm-s-vscode-dark .CodeMirror-activeline-background {
+      background: #2a2d2e
+    }
+
+    .cm-s-vscode-dark .CodeMirror-matchingbracket {
+      color: #fff !important;
+      outline: 1px solid #888
+    }
+
+    .cm-s-vscode-dark .cm-keyword {
+      color: #569cd6
+    }
+
+    .cm-s-vscode-dark .cm-operator {
+      color: #d4d4d4
+    }
+
+    .cm-s-vscode-dark .cm-variable,
+    .cm-s-vscode-dark .cm-variable-2 {
+      color: #9cdcfe
+    }
+
+    .cm-s-vscode-dark .cm-variable-3,
+    .cm-s-vscode-dark .cm-type {
+      color: #4ec9b0
+    }
+
+    .cm-s-vscode-dark .cm-atom {
+      color: #569cd6
+    }
+
+    .cm-s-vscode-dark .cm-number {
+      color: #b5cea8
+    }
+
+    .cm-s-vscode-dark .cm-def {
+      color: #dcdcaa
+    }
+
+    .cm-s-vscode-dark .cm-string,
+    .cm-s-vscode-dark .cm-string-2 {
+      color: #ce9178
+    }
+
+    .cm-s-vscode-dark .cm-comment {
+      color: #6a9955;
+      font-style: italic
+    }
+
+    .cm-s-vscode-dark .cm-tag {
+      color: #569cd6
+    }
+
+    .cm-s-vscode-dark .cm-attribute {
+      color: #9cdcfe
+    }
+
+    .cm-s-vscode-dark .cm-bracket {
+      color: #d4d4d4
+    }
+
+    .cm-s-vscode-dark .cm-builtin {
+      color: #4ec9b0
+    }
+
+    .cm-s-vscode-dark .cm-property {
+      color: #9cdcfe
+    }
+
+    .cm-s-vscode-dark .cm-qualifier {
+      color: #d7ba7d
+    }
+
+    .cm-s-vscode-dark .cm-meta {
+      color: #d4d4d4
+    }
+
+    .cm-s-vscode-dark .cm-error {
+      color: #f44747
+    }
+
+    .cm-s-vscode-dark .cm-link {
+      color: #ce9178
+    }
+
+    .cm-s-vscode-dark .CodeMirror-foldgutter {
+      width: 14px
+    }
+
+    .cm-s-vscode-dark .CodeMirror-foldgutter-open::after {
+      content: "▾";
+      color: #858585;
+      cursor: pointer
+    }
+
+    .cm-s-vscode-dark .CodeMirror-foldgutter-folded::after {
+      content: "▸";
+      color: #858585;
+      cursor: pointer
+    }
+
+    .cm-s-vscode-dark .CodeMirror-lint-marker-error {
+      background: none
+    }
+
+    .cm-s-vscode-dark .CodeMirror-lint-marker-error::before {
+      content: "⬤";
+      color: #f44747;
+      font-size: 9px
+    }
+
+    .cm-s-vscode-dark .CodeMirror-lint-marker-warning {
+      background: none
+    }
+
+    .cm-s-vscode-dark .CodeMirror-lint-marker-warning::before {
+      content: "⬤";
+      color: #dcdcaa;
+      font-size: 9px
+    }
+
+    .cm-s-vscode-dark .CodeMirror-lint-line-error {
+      background: rgba(244, 71, 71, .07)
+    }
+
+    .cm-s-vscode-dark .CodeMirror-lint-line-warning {
+      background: rgba(220, 220, 170, .04)
+    }
+
+    .cm-invisible-char {
+      color: #3c3c3c !important
+    }
+
+    .CodeMirror-vscrollbar::-webkit-scrollbar,
+    .CodeMirror-hscrollbar::-webkit-scrollbar {
+      width: 10px;
+      height: 10px
+    }
+
+    .CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+    .CodeMirror-hscrollbar::-webkit-scrollbar-thumb {
+      background: #424242
+    }
+
+    .CodeMirror-vscrollbar::-webkit-scrollbar-track,
+    .CodeMirror-hscrollbar::-webkit-scrollbar-track {
+      background: #1e1e1e
+    }
+
+    .CodeMirror-dialog {
+      background: #2d2d2d;
+      color: #ccc;
+      border-bottom: 1px solid #3c3c3c;
+      padding: 4px 8px;
+      font-family: system-ui, sans-serif;
+      font-size: 12px
+    }
+
+    .CodeMirror-dialog input {
+      background: #3c3c3c;
+      color: #ccc;
+      border: 1px solid #555;
+      border-radius: 3px;
+      padding: 2px 6px;
+      outline: none;
+      font-family: 'Consolas', monospace
+    }
+
+    /* ── App ── */
+    :root {
+      --bg: #1e1e1e;
+      --sb: #252526;
+      --pn: #2d2d2d;
+      --bd: #3c3c3c;
+      --tx: #cccccc;
+      --mu: #858585;
+      --ac: #569cd6;
+      --rd: #f44747;
+      --hi: #2a2d2e;
+      --sl: #264f78;
+      --bar: #007acc;
+      --act: #333
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Consolas', monospace
+    }
+
+    #vsc {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 1200px;
+      height: 100vh;
+      max-height: 760px;
+      background: var(--bg);
+      color: var(--tx);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #000;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, .8)
+    }
+
+    /* Title bar */
+    #tb {
+      height: 30px;
+      background: #323233;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 8px;
+      flex-shrink: 0;
+      border-bottom: 1px solid #000;
+      user-select: none
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0
+    }
+
+    .dr {
+      background: #ff5f57
+    }
+
+    .dy {
+      background: #febc2e
+    }
+
+    .dg {
+      background: #28c840
+    }
+
+    #tb-t {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      color: var(--mu);
+      font-family: system-ui, sans-serif
+    }
+
+    /* Body */
+    #body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0
+    }
+
+    /* Activity bar */
+    #act {
+      width: 48px;
+      background: var(--act);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 6px 0;
+      flex-shrink: 0;
+      border-right: 1px solid #000
+    }
+
+    .ab {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--mu);
+      background: none;
+      border: none;
+      transition: color .12s;
+      margin: 2px 0
+    }
+
+    .ab:hover {
+      color: var(--tx)
+    }
+
+    .ab.on {
+      color: #fff;
+      border-left: 2px solid #fff;
+      border-radius: 0;
+      width: 38px
+    }
+
+    .ab svg {
+      display: block
+    }
+
+    .ag {
+      flex: 1
+    }
+
+    /* Sidebar */
+    #sb {
+      width: 260px;
+      background: var(--sb);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      border-right: 1px solid #000;
+      overflow: hidden
+    }
+
+    #sb.hide {
+      display: none
+    }
+
+    #sb-hdr {
+      height: 35px;
+      display: flex;
+      align-items: center;
+      padding: 0 6px 0 12px;
+      flex-shrink: 0;
+      gap: 4px
+    }
+
+    #sb-tl {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--mu);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-family: system-ui, sans-serif;
+      flex: 1
+    }
+
+    #sb-acts {
+      display: flex;
+      gap: 1px
+    }
+
+    .sab {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--mu);
+      border-radius: 4px
+    }
+
+    .sab:hover {
+      color: var(--tx);
+      background: var(--hi)
+    }
+
+    .sab svg {
+      display: block
+    }
+
+    /* Connect panel */
+    #cp {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0
+    }
+
+    .ci {
+      background: #3c3c3c;
+      border: 1px solid var(--bd);
+      color: var(--tx);
+      border-radius: 3px;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+      width: 100%
+    }
+
+    .ci:focus {
+      border-color: var(--ac);
+      box-shadow: 0 0 0 1px var(--ac)
+    }
+
+    .ci::placeholder {
+      color: var(--mu)
+    }
+
+    #cn-btn {
+      background: var(--ac);
+      border: none;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: system-ui, sans-serif;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: center;
+      transition: background .15s
+    }
+
+    #cn-btn:hover {
+      background: #4f8fbe
+    }
+
+    #cn-btn:disabled {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    #e-msg {
+      color: var(--rd);
+      font-size: 11px;
+      font-family: system-ui, sans-serif;
+      display: none;
+      line-height: 1.4
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--mu);
+      font-family: system-ui, sans-serif;
+      line-height: 1.5
+    }
+
+    /* File explorer */
+    #fe {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden
+    }
+
+    #fe::-webkit-scrollbar {
+      width: 8px
+    }
+
+    #fe::-webkit-scrollbar-thumb {
+      background: #424242;
+      border-radius: 4px
+    }
+
+    .ti {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 22px;
+      cursor: pointer;
+      color: var(--tx);
+      white-space: nowrap;
+      overflow: hidden;
+      font-size: 13px;
+      padding-right: 8px;
+      user-select: none;
+      position: relative
+    }
+
+    .ti:hover {
+      background: var(--hi)
+    }
+
+    .ti.sel {
+      background: var(--sl)
+    }
+
+    .ti img {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      display: block
+    }
+
+    .ti .cv {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--mu)
+    }
+
+    .ti .nm {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 0
+    }
+
+    .nm-b {}
+
+    .nm-e {
+      color: var(--mu);
+      opacity: .85
+    }
+
+    .ti .ha {
+      display: none;
+      align-items: center;
+      gap: 1px;
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 1px 2px;
+      border-radius: 3px;
+      background: var(--hi)
+    }
+
+    .ti:hover .ha,
+    .ti.sel .ha {
+      display: flex
+    }
+
+    .ti.sel .ha {
+      background: var(--sl)
+    }
+
+    .hab {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--mu);
+      border-radius: 3px
+    }
+
+    .hab:hover {
+      color: var(--tx);
+      background: rgba(255, 255, 255, .12)
+    }
+
+    .hab svg {
+      display: block
+    }
+
+    .tni {
+      flex: 1;
+      background: #3c3c3c;
+      border: 1px solid var(--ac);
+      color: var(--tx);
+      font-size: 13px;
+      font-family: inherit;
+      padding: 1px 4px;
+      outline: none;
+      border-radius: 2px;
+      min-width: 0
+    }
+
+    .tmsg {
+      padding: 5px 12px;
+      color: var(--mu);
+      font-size: 12px;
+      font-family: system-ui, sans-serif
+    }
+
+    .tmsg.er {
+      color: var(--rd)
+    }
+
+    /* Extensions panel */
+    #ext-p {
+      flex: 1;
+      overflow-y: auto;
+      display: none;
+      flex-direction: column
+    }
+
+    #ext-p::-webkit-scrollbar {
+      width: 8px
+    }
+
+    #ext-p::-webkit-scrollbar-thumb {
+      background: #424242;
+      border-radius: 4px
+    }
+
+    #ext-search {
+      padding: 8px 12px;
+      flex-shrink: 0
+    }
+
+    #ext-search input {
+      width: 100%;
+      background: #3c3c3c;
+      border: 1px solid #555;
+      color: var(--tx);
+      border-radius: 3px;
+      padding: 5px 8px;
+      font-size: 12px;
+      outline: none;
+      font-family: inherit
+    }
+
+    #ext-search input:focus {
+      border-color: var(--ac)
+    }
+
+    .ext-sec {
+      padding: 6px 12px 3px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--mu);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-family: system-ui, sans-serif;
+      margin-top: 4px
+    }
+
+    .ext-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      cursor: default
+    }
+
+    .ext-item:hover {
+      background: var(--hi)
+    }
+
+    .ext-ico {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 17px
+    }
+
+    .ext-info {
+      flex: 1;
+      min-width: 0
+    }
+
+    .ext-nm {
+      font-size: 12px;
+      color: var(--tx);
+      font-family: system-ui, sans-serif;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .ext-ds {
+      font-size: 11px;
+      color: var(--mu);
+      font-family: system-ui, sans-serif;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .ext-ctrl {
+      flex-shrink: 0
+    }
+
+    .tbtn {
+      width: 34px;
+      height: 18px;
+      background: #444;
+      border-radius: 9px;
+      cursor: pointer;
+      position: relative;
+      transition: background .2s;
+      border: none;
+      display: block
+    }
+
+    .tbtn.on {
+      background: var(--ac)
+    }
+
+    .tbtn::after {
+      content: '';
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: left .2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .4)
+    }
+
+    .tbtn.on::after {
+      left: 18px
+    }
+
+    .ext-badge-act {
+      font-size: 10px;
+      background: #388a34;
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-family: system-ui, sans-serif;
+      white-space: nowrap
+    }
+
+    .ext-apply {
+      font-size: 11px;
+      background: #3c3c3c;
+      color: var(--tx);
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-family: system-ui, sans-serif;
+      cursor: pointer;
+      border: 1px solid #555;
+      white-space: nowrap
+    }
+
+    .ext-apply:hover {
+      background: #4c4c4c
+    }
+
+    .ext-sel {
+      background: #3c3c3c;
+      border: 1px solid #555;
+      color: var(--tx);
+      border-radius: 3px;
+      padding: 2px 4px;
+      font-size: 12px;
+      font-family: system-ui, sans-serif;
+      outline: none;
+      cursor: pointer
+    }
+
+    /* Editor area */
+    #ea {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0
+    }
+
+    /* Tabs */
+    #tabs {
+      height: 35px;
+      background: var(--pn);
+      display: flex;
+      align-items: flex-end;
+      border-bottom: 1px solid #000;
+      flex-shrink: 0;
+      overflow-x: auto
+    }
+
+    #tabs::-webkit-scrollbar {
+      height: 3px
+    }
+
+    #tabs::-webkit-scrollbar-thumb {
+      background: #555
+    }
+
+    .tab {
+      height: 35px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 10px 0 12px;
+      border-right: 1px solid #000;
+      cursor: pointer;
+      color: var(--mu);
+      font-size: 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      background: var(--pn);
+      border-top: 1px solid transparent
+    }
+
+    .tab.on {
+      background: var(--bg);
+      color: var(--tx);
+      border-top-color: var(--ac)
+    }
+
+    .tab img {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0
+    }
+
+    .tn {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center
+    }
+
+    .tn-e {
+      color: var(--mu);
+      opacity: .8
+    }
+
+    .tab.dirty .tdot {
+      display: inline
+    }
+
+    .tdot {
+      display: none;
+      font-size: 16px;
+      color: var(--tx)
+    }
+
+    .tx-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--mu);
+      padding: 2px;
+      line-height: 0;
+      opacity: 0;
+      transition: opacity .1s;
+      border-radius: 3px
+    }
+
+    .tab:hover .tx-btn {
+      opacity: 1
+    }
+
+    .tx-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, .12)
+    }
+
+    /* Breadcrumb */
+    #bc {
+      height: 24px;
+      background: var(--bg);
+      display: none;
+      align-items: center;
+      padding: 0 12px;
+      gap: 3px;
+      border-bottom: 1px solid var(--bd);
+      flex-shrink: 0;
+      overflow: hidden
+    }
+
+    .bcs {
+      font-size: 12px;
+      color: var(--mu);
+      display: flex;
+      align-items: center;
+      gap: 3px
+    }
+
+    .bcs:last-child {
+      color: var(--tx)
+    }
+
+    .bcs img {
+      width: 13px;
+      height: 13px;
+      display: block
+    }
+
+    .bcsep {
+      font-size: 11px;
+      color: var(--mu);
+      opacity: .4
+    }
+
+    /* Welcome */
+    #wl {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: var(--bg)
+    }
+
+    #wl svg {
+      color: #3c3c3c
+    }
+
+    #wl h3 {
+      font-family: system-ui, sans-serif;
+      font-size: 20px;
+      font-weight: 400;
+      color: #4a4a4a
+    }
+
+    #wl p {
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      color: #3c3c3c;
+      text-align: center;
+      max-width: 280px;
+      line-height: 1.6
+    }
+
+    /* Editor row (editor + minimap) */
+    #ed-row {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0
+    }
+
+    #ec {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      display: none
+    }
+
+    #ec .CodeMirror {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 100%
+    }
+
+    /* Minimap */
+    #mm {
+      width: 90px;
+      background: #1a1a1a;
+      border-left: 1px solid #2d2d2d;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      display: none;
+      flex-shrink: 0
+    }
+
+    #mm canvas {
+      display: block
+    }
+
+    /* Binary notice */
+    #bn {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--mu);
+      font-family: system-ui, sans-serif;
+      font-size: 13px
+    }
+
+    /* Problems panel */
+    #pp {
+      background: var(--sb);
+      border-top: 1px solid var(--bd);
+      flex-shrink: 0;
+      display: none
+    }
+
+    #pt {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--bd)
+    }
+
+    .ptb {
+      height: 30px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 12px;
+      font-size: 11px;
+      font-family: system-ui, sans-serif;
+      cursor: pointer;
+      color: var(--mu);
+      border-bottom: 1px solid transparent;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      user-select: none
+    }
+
+    .ptb.on {
+      color: var(--tx);
+      border-bottom-color: var(--ac)
+    }
+
+    #pl {
+      height: 130px;
+      overflow-y: auto
+    }
+
+    #pl::-webkit-scrollbar {
+      width: 6px
+    }
+
+    #pl::-webkit-scrollbar-thumb {
+      background: #424242
+    }
+
+    .pi {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      min-height: 22px
+    }
+
+    .pi:hover {
+      background: var(--hi)
+    }
+
+    .pi svg {
+      flex-shrink: 0
+    }
+
+    .pm {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--tx)
+    }
+
+    .pl2 {
+      color: var(--mu);
+      flex-shrink: 0;
+      font-size: 11px
+    }
+
+    .ps {
+      color: var(--mu);
+      flex-shrink: 0;
+      font-size: 11px;
+      opacity: .6
+    }
+
+    .pe {
+      padding: 8px 12px;
+      color: var(--mu);
+      font-size: 12px;
+      font-family: system-ui, sans-serif
+    }
+
+    /* Commit */
+    #commit {
+      background: var(--sb);
+      border-top: 1px solid var(--bd);
+      padding: 10px 12px;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0
+    }
+
+    #cmh {
+      font-size: 11px;
+      color: var(--mu);
+      font-family: system-ui, sans-serif;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      display: flex;
+      align-items: center;
+      gap: 5px
+    }
+
+    #cmr {
+      display: flex;
+      gap: 6px
+    }
+
+    #cmi {
+      flex: 1;
+      background: #3c3c3c;
+      border: 1px solid var(--bd);
+      color: var(--tx);
+      border-radius: 3px;
+      padding: 5px 8px;
+      font-size: 12px;
+      font-family: system-ui, sans-serif;
+      outline: none
+    }
+
+    #cmi:focus {
+      border-color: var(--ac);
+      box-shadow: 0 0 0 1px var(--ac)
+    }
+
+    #cmi::placeholder {
+      color: var(--mu)
+    }
+
+    #cmb {
+      background: #388a34;
+      border: none;
+      color: #fff;
+      padding: 5px 12px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+      transition: background .15s
+    }
+
+    #cmb:hover {
+      background: #3fa03a
+    }
+
+    #cmb:disabled {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    /* Status bar */
+    #stb {
+      height: 22px;
+      background: var(--bar);
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      flex-shrink: 0;
+      font-size: 12px;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      user-select: none
+    }
+
+    #stb.dc {
+      background: #68217a
+    }
+
+    #sl {
+      display: flex;
+      align-items: center;
+      flex: 1
+    }
+
+    #sr {
+      display: flex;
+      align-items: center
+    }
+
+    .si {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 6px;
+      height: 22px;
+      cursor: default;
+      white-space: nowrap
+    }
+
+    .si:hover {
+      background: rgba(255, 255, 255, .15)
+    }
+
+    .si svg {
+      display: block
+    }
+
+    /* Context menu */
+    #ctx {
+      position: fixed;
+      background: #252526;
+      border: 1px solid #454545;
+      border-radius: 5px;
+      padding: 4px 0;
+      z-index: 9999;
+      display: none;
+      min-width: 200px;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, .7);
+      font-size: 13px
+    }
+
+    .ci2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px 5px 10px;
+      cursor: pointer;
+      color: var(--tx);
+      user-select: none
+    }
+
+    .ci2:hover {
+      background: var(--ac);
+      color: #fff
+    }
+
+    .ci2 svg {
+      flex-shrink: 0;
+      display: block
+    }
+
+    .ci2.del:hover {
+      background: var(--rd)
+    }
+
+    .csep {
+      height: 1px;
+      background: #454545;
+      margin: 4px 0
+    }
+
+    .ck {
+      flex: 1;
+      text-align: right;
+      color: var(--mu);
+      font-size: 11px
+    }
+
+    .ci2:hover .ck {
+      color: rgba(255, 255, 255, .6)
+    }
+
+    /* Anims */
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .spin {
+      animation: spin .7s linear infinite;
+      display: inline-block
+    }
+  </style>
+</head>
+
+<body>
+  <div id="vsc">
+    <div id="tb">
+      <div class="dot dr"></div>
+      <div class="dot dy"></div>
+      <div class="dot dg"></div>
+      <div id="tb-t">GitHub Code Editor — v3.0.0</div>
+    </div>
+    <div id="body">
+      <!-- Activity bar -->
+      <div id="act">
+        <button class="ab on" id="ab-ex" title="Explorer (Ctrl+Shift+E)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7a2 2 0 012-2h4.5L11 7h10a2 2 0 012 2v2H3V7z"/><rect x="3" y="9" width="18" height="10" rx="2"/></svg>
+      </button>
+        <button class="ab" id="ab-ext" title="Extensions">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="9" height="9" rx="1.5"/><rect x="13" y="2" width="9" height="9" rx="1.5"/><rect x="2" y="13" width="9" height="9" rx="1.5"/><rect x="13" y="13" width="9" height="9" rx="1.5"/></svg>
+      </button>
+        <button class="ab" id="ab-src" title="Source Control">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="18" r="2.5"/><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M6 8.5v7M15.75 6A9.5 9.5 0 016.5 15.5"/></svg>
+      </button>
+        <button class="ab" id="ab-prb" title="Toggle Problems">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9.5"/><line x1="12" y1="8" x2="12" y2="12.5"/><circle cx="12" cy="16" r=".8" fill="currentColor"/></svg>
+      </button>
+        <div class="ag"></div>
+        <button class="ab" id="ab-out" title="Disconnect">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h12M17 8l4 4-4 4M9 3H5a2 2 0 00-2 2v14a2 2 0 002 2h4"/></svg>
+      </button>
+      </div>
+      <!-- Sidebar -->
+      <div id="sb">
+        <div id="sb-hdr">
+          <span id="sb-tl">Explorer</span>
+          <div id="sb-acts">
+            <button class="sab" id="sa-nf" title="New File"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></button>
+            <button class="sab" id="sa-nd" title="New Folder"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
+            <button class="sab" id="sa-rf" title="Refresh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></button>
+            <button class="sab" id="sa-cl" title="Collapse All"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg></button>
+          </div>
+        </div>
+        <!-- Connect panel -->
+        <div id="cp">
+          <input class="ci" type="password" id="tok" placeholder="GitHub Token  (ghp_...)" autocomplete="off" spellcheck="false">
+          <input class="ci" type="text" id="rep" placeholder="owner / repository" spellcheck="false">
+          <button id="cn-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Connect to GitHub</button>
+          <div id="e-msg"></div>
+          <div class="hint">Token needs <strong>repo</strong> scope. Never stored.</div>
+        </div>
+        <div id="fe"></div>
+        <div id="ext-p">
+          <div id="ext-search"><input type="text" placeholder="Search extensions…" readonly></div>
+        </div>
+      </div>
+      <!-- Editor area -->
+      <div id="ea">
+        <div id="tabs"></div>
+        <div id="bc"></div>
+        <div id="ed-row">
+          <div id="wl">
+            <svg width="68" height="68" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+            </svg>
+            <h3>GitHub Code Editor</h3>
+            <p>Connect your repository in the Explorer panel. Browse, edit, commit, and manage files.</p>
+            <p style="font-size:11px;color:#3c3c3c">v3.0.0 · CodeMirror · Syntax Highlighting · Linting · Extensions</p>
+          </div>
+          <div id="ec"></div>
+          <div id="bn"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#858585" stroke-width="1.5">
+              <path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9l-7-7z" />
+              <polyline points="13 2 13 9 20 9" />
+            </svg><span id="bn-m">Binary file.</span></div>
+          <div id="mm"><canvas id="mm-cv"></canvas></div>
+        </div>
+        <div id="pp">
+          <div id="pt">
+            <div class="ptb on"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <circle cx="12" cy="12" r="9.5" />
+                <line x1="12" y1="8" x2="12" y2="13" />
+                <circle cx="12" cy="16.5" r=".8" fill="currentColor" />
+              </svg>Problems <span id="pc">(0)</span></div>
+          </div>
+          <div id="pl">
+            <div class="pe">No problems detected.</div>
+          </div>
+        </div>
+        <div id="commit">
+          <div id="cmh"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <circle cx="12" cy="12" r="3.5" />
+              <path d="M2 12h6.5M15.5 12H22" />
+            </svg>Commit Changes</div>
+          <div id="cmr">
+            <input type="text" id="cmi" placeholder="Message (Ctrl+Enter to commit)"><button id="cmb"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Commit to <span id="cmbr">main</span></button>
+          </div>
+        </div>
+        <div id="stb" class="dc">
+          <div id="sl">
+            <div class="si"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+              </svg><span id="s-rp">Not connected</span></div>
+            <div class="si" id="s-brw" style="display:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
+                <circle cx="6" cy="18" r="2" />
+                <circle cx="6" cy="6" r="2" />
+                <circle cx="18" cy="6" r="2" />
+                <path d="M6 8v8M16 6a8 8 0 01-8 8" />
+              </svg><span id="s-br">main</span></div>
+          </div>
+          <div id="sr">
+            <div class="si" id="s-erw" style="display:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="#f44747" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
+              </svg><span id="s-ec">0</span></div>
+            <div class="si" id="s-waw" style="display:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                stroke="#dcdcaa" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+              </svg><span id="s-wc">0</span></div>
+            <div class="si"><span id="s-st">Connect a repo to start</span></div>
+            <div class="si" id="s-lgw" style="display:none"><span id="s-lg">Plain Text</span></div>
+            <div class="si" id="s-psw" style="display:none"><span id="s-ps">Ln 1, Col 1</span></div>
+            <div class="si" style="opacity:.5">v3.0.0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Context menu -->
+  <div id="ctx">
+    <div class="ci2" id="cx-nf"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.8">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="12" y1="18" x2="12" y2="12" />
+        <line x1="9" y1="15" x2="15" y2="15" />
+      </svg>New File</div>
+    <div class="ci2" id="cx-nd"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.8">
+        <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
+        <line x1="12" y1="11" x2="12" y2="17" />
+        <line x1="9" y1="14" x2="15" y2="14" />
+      </svg>New Folder</div>
+    <div class="csep" id="cx-s1"></div>
+    <div class="ci2" id="cx-rn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.8">
+        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </svg>Rename<span class="ck">F2</span></div>
+    <div class="ci2" id="cx-cp"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.8">
+        <rect x="9" y="9" width="13" height="13" rx="2" />
+        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+      </svg>Copy Path</div>
+    <div class="csep" id="cx-s2"></div>
+    <div class="ci2 del" id="cx-dl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.8">
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+        <line x1="10" y1="11" x2="10" y2="17" />
+        <line x1="14" y1="11" x2="14" y2="17" />
+      </svg>Delete<span class="ck">Del</span></div>
+  </div>
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/markdown/markdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/shell/shell.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/go/go.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/ruby/ruby.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/rust/rust.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/php/php.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/display/autorefresh.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jshint/2.13.6/jshint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/csslint/1.0.5/csslint.min.js"></script>
+  <script>
+    (function(){
+'use strict';
+
+// ── State ──────────────────────────────────────────────────────────
+var A = {
+  token:'', repo:'', branch:'main',
+  tabs:[], active:null, dirty:false, sbView:'explorer', sbOpen:true,
+  ext:{ theme:'vscode-dark', wordWrap:false, minimap:false, autoSave:false,
+        showInvisible:false, relLines:false, fontSize:13, tabSize:4 }
+};
+var CM=null, lintT=null, lintR=[], mmT=null, autoSvT=null;
+var treeMeta=new WeakMap(), ctxEl=null;
+
+// ── Icon generators ────────────────────────────────────────────────
+function badge(bg,fg,lbl,fs){
+  fs=fs||(lbl.length>3?5.5:lbl.length>2?6.5:7.5);
+  return 'data:image/svg+xml,'+encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">'+
+    '<rect width="16" height="16" rx="2.5" fill="'+bg+'"/>'+
+    '<text x="8" y="11.5" text-anchor="middle" font-family="\'Segoe UI\',Arial,sans-serif" font-size="'+fs+'" font-weight="700" fill="'+fg+'">'+lbl+'</text>'+
+    '</svg>');
+}
+var IIMG='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" rx="2.5" fill="#9b59b6"/><rect x="2" y="3" width="12" height="10" rx="1" fill="none" stroke="#fff" stroke-width="1.2"/><circle cx="5.5" cy="6.5" r="1.2" fill="#f1c40f"/><path d="M2 11.5l3-3 2.5 2.5L11 7l3 4.5" stroke="#fff" stroke-width="1.1" fill="none" stroke-linejoin="round" stroke-linecap="round"/></svg>');
+var IFILE='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="#858585" stroke-width="1"><path d="M10 1.5H3.5a1 1 0 00-1 1v11a1 1 0 001 1h9a1 1 0 001-1v-8L10 1.5z"/><polyline points="10 1.5 10 5.5 14 5.5"/></svg>');
+var IFOL='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1 4.5a1.5 1.5 0 011.5-1.5H6l1.5 1.5H13a1.5 1.5 0 011.5 1.5v5A1.5 1.5 0 0113 12.5H2.5A1.5 1.5 0 011 11V4.5z" fill="#e8a000"/></svg>');
+var IFOLO='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M1 5a1.5 1.5 0 011.5-1.5H6l1.5 1.5h5.5a1.5 1.5 0 011.5 1.5V8H1V5z" fill="#e8a000" opacity=".8"/><path d="M1 8h13l-1.3 5H2.3L1 8z" fill="#e8a000"/></svg>');
+
+var FI={
+  js:badge('#f7df1e','#000','JS'),mjs:badge('#f7df1e','#000','JS'),cjs:badge('#f7df1e','#000','JS'),
+  ts:badge('#3178c6','#fff','TS'),jsx:badge('#61dafb','#000','JSX'),tsx:badge('#61dafb','#000','TSX'),
+  py:badge('#3572a5','#ffd43b','PY'),rb:badge('#cc342d','#fff','RB'),go:badge('#00add8','#fff','GO'),
+  rs:badge('#dea584','#000','RS'),java:badge('#5382a1','#f89820','JV'),php:badge('#777bb4','#fff','PHP'),
+  html:badge('#e34c26','#fff','HTML',5),htm:badge('#e34c26','#fff','HTM'),
+  css:badge('#264de4','#fff','CSS'),scss:badge('#c6538c','#fff','SCSS',5),sass:badge('#c6538c','#fff','SASS',5),less:badge('#1d365d','#2196f3','LESS',5),
+  json:badge('#cbcb41','#000','JSON',5),yaml:badge('#cb171e','#fff','YML'),yml:badge('#cb171e','#fff','YML'),
+  md:badge('#083fa1','#fff','MD'),mdx:badge('#1b1f24','#fff','MDX'),
+  sh:badge('#333','#89e051','SH'),bash:badge('#333','#89e051','SH'),zsh:badge('#333','#89e051','SH'),
+  sql:badge('#e38c00','#fff','SQL'),xml:badge('#e44d26','#fff','XML'),svg:badge('#ff9900','#fff','SVG'),
+  c:badge('#555599','#fff','C'),h:badge('#555599','#fff','.H'),cpp:badge('#f34b7d','#fff','C++'),cc:badge('#f34b7d','#fff','C++'),
+  cs:badge('#178600','#fff','C#'),swift:badge('#f05138','#fff','SW'),kt:badge('#7f52ff','#fff','KT'),
+  dart:badge('#00b4ab','#fff','DAR',5),vue:badge('#41b883','#fff','VUE'),svelte:badge('#ff3e00','#fff','SV'),
+  lua:badge('#000080','#fff','LUA'),r:badge('#198ce7','#fff','R'),toml:badge('#9c4221','#fff','TOM',5),
+  txt:badge('#6d6d6d','#fff','TXT'),csv:badge('#217346','#fff','CSV'),env:badge('#ecd53f','#000','ENV'),
+  lock:badge('#666','#fff','LCK'),log:badge('#444','#aaa','LOG'),tf:badge('#7b42bc','#fff','TF'),
+  proto:badge('#1565c0','#fff','PB',5),graphql:badge('#e10098','#fff','GQL',5),
+  png:IIMG,jpg:IIMG,jpeg:IIMG,gif:IIMG,webp:IIMG,ico:IIMG,bmp:IIMG,tiff:IIMG,
+  gitignore:badge('#f54d27','#fff','GIT'),dockerfile:badge('#0db7ed','#fff','DOK'),makefile:badge('#427819','#fff','MK'),
+};
+function getIco(name){
+  var e=xtn(name);
+  if(!e){var l=name.toLowerCase();if(l.startsWith('.gitignore')||l==='gitignore')return FI.gitignore;if(l==='dockerfile')return FI.dockerfile;if(l==='makefile'||l==='gnumakefile')return FI.makefile;if(l.startsWith('.env'))return FI.env;if(l==='license'||l==='licence')return badge('#555','#fff','LIC',5);if(l==='readme')return FI.md;}
+  return FI[e]||IFILE;
+}
+
+var MODES={js:'javascript',mjs:'javascript',cjs:'javascript',ts:'javascript',jsx:'javascript',tsx:'javascript',json:'application/json',py:'python',rb:'ruby',go:'go',rs:'rust',html:'htmlmixed',htm:'htmlmixed',xml:'xml',svg:'xml',css:'css',scss:'css',sass:'css',md:'markdown',yaml:'yaml',yml:'yaml',sh:'shell',bash:'shell',zsh:'shell',sql:'sql',php:'php',java:'text/x-java',c:'text/x-csrc',h:'text/x-csrc',cpp:'text/x-c++src',cc:'text/x-c++src',cs:'text/x-csharp',graphql:'null',proto:'null',tf:'null',lua:'null',r:'null',dart:'null',kt:'null',swift:'null',vue:'javascript'};
+var LANGS={js:'JavaScript',mjs:'JavaScript',cjs:'JavaScript',ts:'TypeScript',jsx:'JSX',tsx:'TSX',json:'JSON',py:'Python',rb:'Ruby',go:'Go',rs:'Rust',html:'HTML',htm:'HTML',xml:'XML',svg:'SVG',css:'CSS',scss:'SCSS',sass:'SASS',less:'Less',md:'Markdown',yaml:'YAML',yml:'YAML',sh:'Shell',bash:'Shell',sql:'SQL',php:'PHP',java:'Java',c:'C',h:'C Header',cpp:'C++',cc:'C++',cs:'C#',graphql:'GraphQL',proto:'Protobuf',tf:'Terraform',lua:'Lua',r:'R',dart:'Dart',kt:'Kotlin',swift:'Swift',vue:'Vue',txt:'Plain Text'};
+var BINEXTS=new Set(['png','jpg','jpeg','gif','webp','bmp','ico','tiff','pdf','zip','tar','gz','bz2','7z','rar','exe','dll','so','dylib','bin','mp3','mp4','wav','ogg','avi','mov','mkv','webm','ttf','woff','woff2','eot','otf','psd','ai','sketch','fig']);
+
+// ── Helpers ────────────────────────────────────────────────────────
+function $i(id){return document.getElementById(id);}
+function xtn(n){var p=n.lastIndexOf('.');return p>0?n.slice(p+1).toLowerCase():'';}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function setSt(t){$i('s-st').textContent=t;}
+function showErr(m){var e=$i('e-msg');e.textContent=m;e.style.display=m?'block':'none';}
+function getTab(){return A.tabs.find(function(t){return t.path===A.active;});}
+function dB64(b){try{return decodeURIComponent(escape(atob(b.replace(/\s/g,''))));}catch(e){return atob(b.replace(/\s/g,''));}}
+function eB64(s){try{return btoa(unescape(encodeURIComponent(s)));}catch(e){return btoa(s);}}
+function splitName(name){var d=name.lastIndexOf('.');if(d<=0)return[name,''];return[name.slice(0,d),name.slice(d)];}
+function renderName(name){var p=splitName(name);if(!p[1])return esc(p[0]);return '<span class="nm-b">'+esc(p[0])+'</span><span class="nm-e">'+esc(p[1])+'</span>';}
+
+// ── GitHub API ─────────────────────────────────────────────────────
+async function gh(path,opts){
+  opts=opts||{};
+  var r=await fetch('https://api.github.com/'+path,Object.assign({},opts,{headers:Object.assign({'Authorization':'token '+A.token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},opts.headers||{})}));
+  var d=await r.json();if(!r.ok)throw new Error(d.message||'HTTP '+r.status);return d;
+}
+
+// ── Connect / Logout ───────────────────────────────────────────────
+async function connect(){
+  var tok=$i('tok').value.trim();
+  var repo=$i('rep').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\/$/,'');
+  if(!tok){showErr('Enter a GitHub token.');return;}
+  if(!repo||!repo.includes('/')){showErr('Use owner/repository format.');return;}
+  A.token=tok;A.repo=repo;showErr('');
+  var btn=$i('cn-btn');btn.disabled=true;btn.innerHTML='<span class="spin">↻</span> Connecting…';setSt('Connecting…');
+  try{
+    var info=await gh('repos/'+repo);
+    A.branch=info.default_branch||'main';
+    $i('cp').style.display='none';
+    $i('s-rp').textContent=repo;$i('s-br').textContent=A.branch;$i('cmbr').textContent=A.branch;
+    $i('s-brw').style.display='flex';$i('stb').classList.remove('dc');
+    $i('tb-t').textContent=repo+' — GitHub Code Editor v3.0.0';
+    setSt('Ready');refreshTree();
+  }catch(e){A.token='';showErr('Failed: '+e.message);setSt('Connection failed.');}
+  finally{btn.disabled=false;btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Connect to GitHub';}
+}
+
+function logout(){
+  clearInterval(autoSvT);
+  A.tabs=[];A.active=null;A.dirty=false;A.token='';A.repo='';
+  $i('cp').style.display='flex';$i('tok').value='';$i('fe').innerHTML='';$i('tabs').innerHTML='';
+  $i('bc').style.display='none';$i('commit').style.display='none';$i('pp').style.display='none';
+  $i('ec').style.display='none';$i('bn').style.display='none';$i('wl').style.display='flex';$i('mm').style.display='none';
+  $i('s-rp').textContent='Not connected';$i('s-brw').style.display='none';
+  $i('s-lgw').style.display='none';$i('s-psw').style.display='none';$i('s-erw').style.display='none';$i('s-waw').style.display='none';
+  $i('stb').classList.add('dc');setSt('Connect a repo to start');
+  $i('tb-t').textContent='GitHub Code Editor — v3.0.0';
+  document.querySelectorAll('.ab').forEach(function(b){b.classList.remove('on');});
+  $i('ab-ex').classList.add('on');$i('sb').classList.remove('hide');
+  showSbPanel('explorer');if(CM)CM.setValue('');lintR=[];
+}
+
+// ── Tree ───────────────────────────────────────────────────────────
+function refreshTree(){var fe=$i('fe');fe.innerHTML='';loadDir('',0,fe);}
+
+async function loadDir(dirPath,depth,container){
+  var el=document.createElement('div');el.className='tmsg';el.innerHTML='<span class="spin">↻</span> Loading…';container.appendChild(el);
+  try{
+    var url=(dirPath?'repos/'+A.repo+'/contents/'+dirPath:'repos/'+A.repo+'/contents')+'?ref='+encodeURIComponent(A.branch);
+    var items=await gh(url);if(!Array.isArray(items))items=[items];
+    el.remove();
+    var sorted=items.slice().sort(function(a,b){return a.type!==b.type?a.type==='dir'?-1:1:a.name.localeCompare(b.name);});
+    sorted.forEach(function(item){container.appendChild(mkItem(item,depth));});
+    if(!sorted.length){var e2=document.createElement('div');e2.className='tmsg';e2.textContent='Empty';container.appendChild(e2);}
+  }catch(e){el.remove();var ee=document.createElement('div');ee.className='tmsg er';ee.textContent='Error: '+e.message;container.appendChild(ee);}
+}
+
+function mkItem(item,depth){
+  var isD=item.type==='dir';
+  var el=document.createElement('div');el.className='ti';el.style.paddingLeft=(6+depth*16)+'px';
+  treeMeta.set(el,{path:item.path,type:item.type,sha:item.sha||'',name:item.name,depth:depth});
+  // chevron
+  var cv=document.createElement('div');cv.className='cv';cv.innerHTML=isD?CHR:'<span style="width:14px;display:block"></span>';el.appendChild(cv);
+  // icon
+  var im=document.createElement('img');im.src=isD?IFOL:getIco(item.name);im.width=14;im.height=14;im.alt='';el.appendChild(im);
+  // name
+  var nm=document.createElement('span');nm.className='nm';nm.innerHTML=renderName(item.name);el.appendChild(nm);
+  // hover action buttons
+  var ha=document.createElement('div');ha.className='ha';
+  if(isD){
+    ha.appendChild(hab(SVNF,'New File',function(e){e.stopPropagation();startNew('file',item.path,depth+1,el._kc);}));
+    ha.appendChild(hab(SVND,'New Folder',function(e){e.stopPropagation();startNew('folder',item.path,depth+1,el._kc);}));
+  }
+  ha.appendChild(hab(SVRN,'Rename (F2)',function(e){e.stopPropagation();renameUI(el);}));
+  ha.appendChild(hab(SVDL,'Delete',function(e){e.stopPropagation();doDelete(el);}));
+  el.appendChild(ha);
+  // events
+  if(isD){
+    var open=false;var kc=null;el._kc=null;
+    el.addEventListener('click',function(e){
+      if(e.target.closest('.ha'))return;
+      open=!open;
+      cv.innerHTML=open?CHD:CHR;im.src=open?IFOLO:IFOL;
+      if(open){kc=document.createElement('div');el._kc=kc;el.after(kc);loadDir(item.path,depth+1,kc);}
+      else if(kc){kc.remove();kc=null;el._kc=null;}
+    });
+  }else{
+    el.addEventListener('click',function(e){if(e.target.closest('.ha'))return;openFile(item.path,item.sha,el);});
+  }
+  el.addEventListener('contextmenu',function(e){e.preventDefault();e.stopPropagation();showCtx(e.clientX,e.clientY,el);});
+  return el;
+}
+
+function hab(svg,title,fn){
+  var b=document.createElement('button');b.className='hab';b.title=title;b.innerHTML=svg;b.addEventListener('click',fn);return b;
+}
+
+var CHR='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+var CHD='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>';
+var SVNF='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>';
+var SVND='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>';
+var SVRN='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+var SVDL='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f44747" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>';
+
+// ── File open / switch / close ─────────────────────────────────────
+async function openFile(path,sha,treeEl){
+  if(A.dirty&&!confirm('Discard unsaved changes?'))return;
+  var ex=A.tabs.find(function(t){return t.path===path;});if(ex){switchTab(path);return;}
+  var name=path.split('/').pop(),e=xtn(name),bin=BINEXTS.has(e);
+  var tab={path:path,sha:sha,name:name,ext:e,content:null,isBinary:bin,cmState:null};
+  A.tabs.push(tab);A.active=path;A.dirty=false;
+  renderTabs();
+  document.querySelectorAll('.ti').forEach(function(el){el.classList.remove('sel');});
+  if(treeEl)treeEl.classList.add('sel');
+  showEd(tab,true);setSt('Loading…');
+  try{
+    var data=await gh('repos/'+A.repo+'/contents/'+path+'?ref='+encodeURIComponent(A.branch));
+    tab.sha=data.sha;
+    if(!bin){
+      if(data.content){tab.content=dB64(data.content);}
+      else{var blob=await gh('repos/'+A.repo+'/git/blobs/'+data.sha);tab.content=dB64(blob.content);}
+    }
+    showEd(tab,false);
+    $i('s-lg').textContent=LANGS[e]||'Plain Text';$i('s-lgw').style.display='flex';
+    setSt((data.size/1024).toFixed(1)+' KB');
+  }catch(err){
+    setSt('Error: '+err.message);
+    A.tabs=A.tabs.filter(function(t){return t.path!==path;});
+    A.active=A.tabs.length?A.tabs[A.tabs.length-1].path:null;
+    renderTabs();showEd(getTab()||null,false);
+  }
+}
+
+function switchTab(path){
+  if(A.dirty&&A.active!==path&&!confirm('Discard unsaved changes?'))return;
+  var prev=getTab();
+  if(prev&&CM)prev.cmState={scroll:CM.getScrollInfo(),cursor:CM.getCursor(),history:CM.getHistory()};
+  A.active=path;A.dirty=false;
+  var tab=A.tabs.find(function(t){return t.path===path;});
+  renderTabs();showEd(tab,false);$i('commit').style.display='none';
+}
+
+function closeTab(path){
+  if(A.active===path&&A.dirty&&!confirm('Discard unsaved changes?'))return;
+  var idx=A.tabs.findIndex(function(t){return t.path===path;});if(idx<0)return;
+  A.tabs.splice(idx,1);
+  if(A.active===path){A.dirty=false;$i('commit').style.display='none';var nx=A.tabs[Math.min(idx,A.tabs.length-1)];A.active=nx?nx.path:null;}
+  renderTabs();showEd(A.tabs.find(function(t){return t.path===A.active;})||null,false);
+}
+
+function renderTabs(){
+  var tc=$i('tabs');tc.innerHTML='';
+  A.tabs.forEach(function(tab){
+    var on=tab.path===A.active;
+    var el=document.createElement('div');el.className='tab'+(on?' on':'')+(on&&A.dirty?' dirty':'');
+    var im=document.createElement('img');im.src=getIco(tab.name);im.width=14;im.height=14;im.alt='';
+    var nm=document.createElement('span');nm.className='tn';nm.innerHTML=renderName(tab.name);nm.title=tab.path;
+    var dt=document.createElement('span');dt.className='tdot';dt.textContent='●';
+    var xb=document.createElement('button');xb.className='tx-btn';xb.title='Close';
+    xb.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    xb.addEventListener('click',function(e){e.stopPropagation();closeTab(tab.path);});
+    el.appendChild(im);el.appendChild(nm);el.appendChild(dt);el.appendChild(xb);
+    el.addEventListener('click',function(){switchTab(tab.path);});
+    tc.appendChild(el);
+  });
+}
+
+// ── Show editor ────────────────────────────────────────────────────
+function showEd(tab,loading){
+  var wl=$i('wl'),ec=$i('ec'),bn=$i('bn'),bc=$i('bc'),mm=$i('mm');
+  if(!tab){wl.style.display='flex';ec.style.display='none';bn.style.display='none';bc.style.display='none';mm.style.display='none';$i('s-lgw').style.display='none';$i('s-psw').style.display='none';return;}
+  wl.style.display='none';mkBC(tab.path);bc.style.display='flex';
+  if(loading){ec.style.display='block';bn.style.display='none';mm.style.display='none';if(CM)CM.setValue('');return;}
+  if(tab.isBinary){ec.style.display='none';bn.style.display='flex';mm.style.display='none';$i('bn-m').textContent=tab.name+' — binary file, cannot be edited.';$i('s-psw').style.display='none';return;}
+  ec.style.display='block';bn.style.display='none';
+  mm.style.display=A.ext.minimap?'block':'none';
+  if(tab.content===null)return;
+  var mode=MODES[tab.ext]||'null';
+  var lintable=['javascript','application/json','css'].includes(mode);
+  if(CM){
+    CM.off('change',onCMCh);
+    CM.setValue(tab.content);
+    CM.setOption('mode',mode);
+    CM.setOption('lint',lintable?{delay:800}:false);
+    if(tab.cmState){CM.setHistory(tab.cmState.history);CM.setCursor(tab.cmState.cursor);CM.scrollTo(tab.cmState.scroll.left,tab.cmState.scroll.top);}
+    else{CM.clearHistory();CM.setCursor(0,0);}
+    CM.on('change',onCMCh);CM.refresh();
+    var cur=CM.getCursor();$i('s-ps').textContent='Ln '+(cur.line+1)+', Col '+(cur.ch+1);
+    $i('s-psw').style.display='flex';$i('s-lg').textContent=LANGS[tab.ext]||'Plain Text';$i('s-lgw').style.display='flex';
+    clearTimeout(lintT);lintT=setTimeout(runLint,1000);
+    schedMM();
+  }
+}
+
+function mkBC(path){
+  var segs=path.split('/'),bc=$i('bc');bc.innerHTML='';
+  segs.forEach(function(seg,i){
+    var sp=document.createElement('span');sp.className='bcs';
+    var im=document.createElement('img');im.src=i===segs.length-1?getIco(seg):IFOL;im.width=13;im.height=13;im.alt='';
+    sp.appendChild(im);sp.appendChild(document.createTextNode(seg));bc.appendChild(sp);
+    if(i<segs.length-1){var s=document.createElement('span');s.className='bcsep';s.textContent='›';bc.appendChild(s);}
+  });
+}
+
+// ── CodeMirror init ────────────────────────────────────────────────
+function initCM(){
+  CodeMirror.registerHelper('lint','javascript',function(text){
+    var f=[];if(typeof JSHINT==='undefined')return f;
+    JSHINT(text,{esversion:11,browser:true,node:true,undef:false,unused:false});
+    (JSHINT.errors||[]).forEach(function(e){if(!e)return;var ln=(e.line||1)-1,ch=Math.max(0,(e.character||1)-1);f.push({from:CodeMirror.Pos(ln,ch),to:CodeMirror.Pos(ln,ch+1),message:e.reason,severity:e.code&&e.code[0]==='W'?'warning':'error'});});
+    return f;
+  });
+  CodeMirror.registerHelper('lint','application/json',function(text){
+    var f=[];
+    try{JSON.parse(text);}
+    catch(e){var m=e.message.match(/position (\d+)/i),pos=m?+m[1]:0,before=text.substr(0,pos),ln=(before.match(/\n/g)||[]).length,ch=before.length-(before.lastIndexOf('\n')+1);f.push({from:CodeMirror.Pos(ln,Math.max(0,ch-1)),to:CodeMirror.Pos(ln,ch),message:e.message,severity:'error'});}
+    return f;
+  });
+  CodeMirror.registerHelper('lint','css',function(text){
+    var f=[];if(typeof CSSLint==='undefined')return f;
+    (CSSLint.verify(text).messages||[]).forEach(function(m){var ln=Math.max(0,(m.line||1)-1),ch=Math.max(0,(m.col||1)-1);f.push({from:CodeMirror.Pos(ln,ch),to:CodeMirror.Pos(ln,ch+1),message:m.message,severity:m.type==='error'?'error':'warning'});});
+    return f;
+  });
+  CM=CodeMirror($i('ec'),{value:'',theme:'vscode-dark',lineNumbers:true,gutters:['CodeMirror-linenumbers','CodeMirror-foldgutter','CodeMirror-lint-markers'],foldGutter:true,lint:false,matchBrackets:true,autoCloseBrackets:true,lineWrapping:false,tabSize:4,indentWithTabs:false,autoRefresh:true,extraKeys:{'Ctrl-/':'toggleComment','Cmd-/':'toggleComment','Ctrl-F':'find','Cmd-F':'find','Ctrl-S':function(){if(A.dirty)$i('commit').style.display='flex';},'Cmd-S':function(){if(A.dirty)$i('commit').style.display='flex';},'Tab':function(cm){if(cm.somethingSelected())cm.indentSelection('add');else cm.replaceSelection(Array(cm.getOption('tabSize')+1).join(' '));},'Shift-Tab':'indentLess'}});
+  CM.on('change',onCMCh);
+  CM.on('cursorActivity',function(){var c=CM.getCursor();$i('s-ps').textContent='Ln '+(c.line+1)+', Col '+(c.ch+1);if(A.ext.relLines)CM.refresh();});
+  CM.on('scroll',schedMM);
+  applyExt();
+}
+
+function onCMCh(){
+  var tab=getTab();if(tab)tab.content=CM.getValue();
+  if(!A.dirty){A.dirty=true;renderTabs();$i('commit').style.display='flex';setSt('Modified');}
+  clearTimeout(lintT);lintT=setTimeout(runLint,1000);
+  schedMM();
+}
+
+// ── Linting ────────────────────────────────────────────────────────
+function runLint(){
+  var tab=getTab();if(!tab||tab.isBinary||!CM){lintR=[];updPP();return;}
+  var c=CM.getValue(),e=tab.ext;lintR=[];
+  if(['js','mjs','cjs','jsx','ts','tsx','vue'].includes(e)&&typeof JSHINT!=='undefined'){
+    JSHINT(c,{esversion:11,browser:true,node:true,undef:false,unused:false});
+    (JSHINT.errors||[]).forEach(function(er){if(!er)return;lintR.push({line:er.line||1,col:er.character||1,msg:er.reason,sev:er.code&&er.code[0]==='W'?'warning':'error',src:'JSHint'});});
+  }
+  if(e==='json'){try{JSON.parse(c);}catch(er){var m=er.message.match(/position (\d+)/i),pos=m?+m[1]:0,before=c.substr(0,pos),ln=(before.match(/\n/g)||[]).length+1;lintR.push({line:ln,col:1,msg:er.message,sev:'error',src:'JSON'});}}
+  if(['css','scss'].includes(e)&&typeof CSSLint!=='undefined'){(CSSLint.verify(c).messages||[]).forEach(function(m){lintR.push({line:m.line||1,col:m.col||1,msg:m.message,sev:m.type==='error'?'error':'warning',src:'CSSLint'});});}
+  updPP();
+}
+
+function updPP(){
+  var errs=lintR.filter(function(p){return p.sev==='error';}).length;
+  var warns=lintR.filter(function(p){return p.sev==='warning';}).length;
+  $i('s-ec').textContent=errs;$i('s-wc').textContent=warns;
+  $i('s-erw').style.display=errs?'flex':'none';$i('s-waw').style.display=warns?'flex':'none';
+  $i('pc').textContent='('+lintR.length+')';
+  var list=$i('pl');
+  if(!lintR.length){list.innerHTML='<div class="pe">No problems detected.</div>';return;}
+  list.innerHTML='';
+  lintR.forEach(function(p){
+    var el=document.createElement('div');el.className='pi';
+    var ico=p.sev==='error'
+      ?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f44747" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+      :'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dcdcaa" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+    el.innerHTML=ico+'<span class="pm">'+esc(p.msg)+'</span><span class="pl2">Ln '+p.line+', Col '+p.col+'</span><span class="ps">'+p.src+'</span>';
+    el.addEventListener('click',function(){if(CM){CM.setCursor({line:p.line-1,ch:p.col-1});CM.scrollIntoView({line:p.line-1,ch:p.col-1},100);CM.focus();}});
+    list.appendChild(el);
+  });
+  if(lintR.length)$i('pp').style.display='block';
+}
+
+// ── Commit ─────────────────────────────────────────────────────────
+async function commitFile(){
+  var msg=$i('cmi').value.trim();if(!msg){$i('cmi').focus();return;}
+  var tab=getTab();if(!tab||tab.isBinary)return;
+  $i('cmb').disabled=true;$i('cmb').innerHTML='<span class="spin">↻</span> Committing…';setSt('Committing…');
+  try{
+    var res=await gh('repos/'+A.repo+'/contents/'+tab.path,{method:'PUT',body:JSON.stringify({message:msg,content:eB64(tab.content),sha:tab.sha,branch:A.branch})});
+    tab.sha=res.content.sha;A.dirty=false;renderTabs();$i('commit').style.display='none';$i('cmi').value='';setSt('Committed: "'+msg+'"');
+  }catch(e){setSt('Commit failed: '+e.message);alert('Commit failed:\n'+e.message);}
+  finally{$i('cmb').disabled=false;$i('cmb').innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Commit to <span id="cmbr">'+A.branch+'</span>';}
+}
+
+// ── File management ────────────────────────────────────────────────
+async function startNew(type,parentPath,depth,container){
+  var target=container||$i('fe');
+  var inp=document.createElement('div');inp.className='ti';inp.style.paddingLeft=(6+depth*16)+'px';
+  var cv=document.createElement('div');cv.className='cv';cv.innerHTML='<span style="width:14px;display:block"></span>';
+  var im=document.createElement('img');im.src=type==='folder'?IFOL:IFILE;im.width=14;im.height=14;im.alt='';
+  var ni=document.createElement('input');ni.type='text';ni.className='tni';ni.placeholder=type==='folder'?'folder name…':'file name…';
+  inp.appendChild(cv);inp.appendChild(im);inp.appendChild(ni);
+  target.insertBefore(inp,target.firstChild);ni.focus();
+  var done=false;
+  async function finish(){
+    if(done)return;done=true;var name=ni.value.trim();inp.remove();
+    if(!name)return;
+    var fullPath=parentPath?parentPath+'/'+name:name;
+    setSt('Creating…');
+    try{
+      if(type==='folder'){await gh('repos/'+A.repo+'/contents/'+fullPath+'/.gitkeep',{method:'PUT',body:JSON.stringify({message:'Create folder '+name,content:eB64(''),branch:A.branch})});}
+      else{var res=await gh('repos/'+A.repo+'/contents/'+fullPath,{method:'PUT',body:JSON.stringify({message:'Create '+name,content:eB64(''),branch:A.branch})});setSt('Created '+name);refreshTree();openFile(fullPath,res.content.sha,null);return;}
+      setSt('Created '+name);refreshTree();
+    }catch(e){setSt('Error: '+e.message);alert('Failed: '+e.message);}
+  }
+  ni.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();finish();}if(e.key==='Escape'){done=true;inp.remove();}});
+  ni.addEventListener('blur',function(){setTimeout(finish,180);});
+}
+
+function renameUI(treeEl){
+  var meta=treeMeta.get(treeEl);if(!meta)return;
+  if(meta.type==='dir'){alert('Folder rename requires moving all files inside. Create a new folder and move files manually.');return;}
+  var nm=treeEl.querySelector('.nm');var oldHTML=nm.innerHTML;
+  var ni=document.createElement('input');ni.type='text';ni.className='tni';ni.value=meta.name;
+  nm.replaceWith(ni);ni.focus();ni.select();
+  var done=false;
+  async function finish(){
+    if(done)return;done=true;var newName=ni.value.trim();ni.replaceWith(nm);nm.innerHTML=oldHTML;
+    if(!newName||newName===meta.name)return;
+    var parentPath=meta.path.split('/').slice(0,-1).join('/');
+    var newPath=parentPath?parentPath+'/'+newName:newName;
+    setSt('Renaming…');
+    try{
+      var data=await gh('repos/'+A.repo+'/contents/'+meta.path+'?ref='+encodeURIComponent(A.branch));
+      await gh('repos/'+A.repo+'/contents/'+newPath,{method:'PUT',body:JSON.stringify({message:'Rename '+meta.name+' to '+newName,content:data.content.replace(/\s/g,''),branch:A.branch})});
+      await gh('repos/'+A.repo+'/contents/'+meta.path,{method:'DELETE',body:JSON.stringify({message:'Rename '+meta.name+' to '+newName,sha:data.sha,branch:A.branch})});
+      // close old tab
+      var ti=A.tabs.findIndex(function(t){return t.path===meta.path;});
+      if(ti>=0){A.tabs.splice(ti,1);if(A.active===meta.path){A.active=null;A.dirty=false;}renderTabs();}
+      setSt('Renamed to '+newName);refreshTree();
+    }catch(e){setSt('Rename failed: '+e.message);alert('Rename failed:\n'+e.message);}
+  }
+  ni.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();finish();}if(e.key==='Escape'){done=true;ni.replaceWith(nm);nm.innerHTML=oldHTML;}});
+  ni.addEventListener('blur',function(){setTimeout(finish,180);});
+}
+
+async function doDelete(treeEl){
+  var meta=treeMeta.get(treeEl);if(!meta)return;
+  if(meta.type==='dir'){alert('Folder deletion requires deleting all files inside. Please delete files individually.');return;}
+  if(!confirm('Delete "'+meta.name+'"?\nThis cannot be undone.'))return;
+  setSt('Deleting…');
+  try{
+    var data=await gh('repos/'+A.repo+'/contents/'+meta.path+'?ref='+encodeURIComponent(A.branch));
+    await gh('repos/'+A.repo+'/contents/'+meta.path,{method:'DELETE',body:JSON.stringify({message:'Delete '+meta.name,sha:data.sha,branch:A.branch})});
+    var ti=A.tabs.findIndex(function(t){return t.path===meta.path;});
+    if(ti>=0){A.tabs.splice(ti,1);if(A.active===meta.path){A.active=null;A.dirty=false;}renderTabs();showEd(getTab()||null,false);}
+    setSt('Deleted '+meta.name);refreshTree();
+  }catch(e){setSt('Delete failed: '+e.message);alert('Delete failed:\n'+e.message);}
+}
+
+// ── Context menu ───────────────────────────────────────────────────
+function showCtx(x,y,treeEl){
+  ctxEl=treeEl;var meta=treeEl?treeMeta.get(treeEl):null;var isD=meta&&meta.type==='dir';
+  $i('cx-nf').style.display='flex';$i('cx-nd').style.display='flex';
+  $i('cx-s1').style.display=meta?'block':'none';
+  $i('cx-rn').style.display=(meta&&!isD)?'flex':'none';
+  $i('cx-cp').style.display=meta?'flex':'none';
+  $i('cx-s2').style.display=meta?'block':'none';
+  $i('cx-dl').style.display=meta?'flex':'none';
+  var menu=$i('ctx');menu.style.display='block';menu.style.left='0';menu.style.top='0';
+  var mw=menu.offsetWidth,mh=menu.offsetHeight;
+  menu.style.left=Math.min(x,window.innerWidth-mw-4)+'px';menu.style.top=Math.min(y,window.innerHeight-mh-4)+'px';
+}
+function hideCtx(){$i('ctx').style.display='none';}
+
+$i('cx-nf').addEventListener('click',function(){hideCtx();var meta=ctxEl?treeMeta.get(ctxEl):null;var isD=meta&&meta.type==='dir';var pp=meta?(isD?meta.path:meta.path.split('/').slice(0,-1).join('/')):'';;var d=meta?(isD?meta.depth+1:meta.depth):0;var c=meta?(isD?ctxEl._kc:ctxEl.parentElement):null;startNew('file',pp,d,c||$i('fe'));});
+$i('cx-nd').addEventListener('click',function(){hideCtx();var meta=ctxEl?treeMeta.get(ctxEl):null;var isD=meta&&meta.type==='dir';var pp=meta?(isD?meta.path:meta.path.split('/').slice(0,-1).join('/')):'';;var d=meta?(isD?meta.depth+1:meta.depth):0;var c=meta?(isD?ctxEl._kc:ctxEl.parentElement):null;startNew('folder',pp,d,c||$i('fe'));});
+$i('cx-rn').addEventListener('click',function(){hideCtx();if(ctxEl)renameUI(ctxEl);});
+$i('cx-cp').addEventListener('click',function(){hideCtx();var meta=ctxEl?treeMeta.get(ctxEl):null;if(meta)navigator.clipboard.writeText(meta.path).then(function(){setSt('Copied: '+meta.path);});});
+$i('cx-dl').addEventListener('click',function(){hideCtx();if(ctxEl)doDelete(ctxEl);});
+$i('fe').addEventListener('contextmenu',function(e){if(!e.target.closest('.ti')){e.preventDefault();if(!A.token)return;ctxEl=null;showCtx(e.clientX,e.clientY,null);}});
+
+// ── Extensions ─────────────────────────────────────────────────────
+var THEMES=[
+  {id:'vscode-dark',name:'Dark+ (Default)',desc:'VS Code classic dark theme',color:'#007acc',light:false},
+  {id:'monokai',name:'Monokai',desc:'Classic warm dark color scheme',color:'#f92672',light:false},
+  {id:'dracula',name:'Dracula',desc:'Vivid purple dark theme',color:'#bd93f9',light:false},
+  {id:'material-darker',name:'Material Darker',desc:'Material Design dark variant',color:'#009688',light:false},
+  {id:'one-dark',name:'Atom One Dark',desc:'Atom editor dark theme',color:'#61afef',light:false},
+  {id:'github',name:'GitHub Light',desc:'Clean GitHub-inspired light theme',color:'#0366d6',light:true},
+  {id:'solarized light',name:'Solarized Light',desc:'Precision colors light scheme',color:'#268bd2',light:true},
+];
+var FEATURES=[
+  {id:'wordWrap',name:'Word Wrap',desc:'Wrap long lines at the viewport edge',icon:'↵'},
+  {id:'minimap',name:'Minimap',desc:'Show scrollable code overview panel',icon:'⊟'},
+  {id:'autoSave',name:'Auto Save (30s)',desc:'Auto-commit changes every 30 seconds',icon:'💾'},
+  {id:'showInvisible',name:'Render Whitespace',desc:'Visualize space and tab characters',icon:'·'},
+  {id:'relLines',name:'Relative Line Numbers',desc:'Show line numbers relative to cursor',icon:'≡'},
+];
+var SETTINGS=[
+  {id:'fontSize',name:'Font Size',desc:'Editor font size in pixels',opts:[11,12,13,14,15,16]},
+  {id:'tabSize',name:'Tab Width',desc:'Spaces per indentation level',opts:[2,4,8]},
+];
+
+function renderExtPanel(){
+  var panel=$i('ext-p');
+  // Keep search bar, rebuild rest
+  while(panel.children.length>1)panel.removeChild(panel.lastChild);
+
+  function sec(label){var d=document.createElement('div');d.className='ext-sec';d.textContent=label;panel.appendChild(d);}
+
+  sec('COLOR THEMES');
+  THEMES.forEach(function(t){
+    var item=document.createElement('div');item.className='ext-item';
+    var isActive=A.ext.theme===t.id;
+    var icoEl=document.createElement('div');icoEl.className='ext-ico';icoEl.style.background=t.color;
+    icoEl.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="white"><circle cx="6" cy="6" r="3.5"/><circle cx="18" cy="6" r="3.5"/><circle cx="12" cy="17" r="3.5"/></svg>';
+    var info=document.createElement('div');info.className='ext-info';
+    info.innerHTML='<div class="ext-nm">'+esc(t.name)+'</div><div class="ext-ds">'+esc(t.desc)+'</div>';
+    var ctrl=document.createElement('div');ctrl.className='ext-ctrl';
+    if(isActive){ctrl.innerHTML='<span class="ext-badge-act">Active</span>';}
+    else{
+      var btn=document.createElement('button');btn.className='ext-apply';btn.textContent='Apply';
+      btn.addEventListener('click',function(){A.ext.theme=t.id;applyTheme(t.id,t.light);renderExtPanel();});
+      ctrl.appendChild(btn);
+    }
+    item.appendChild(icoEl);item.appendChild(info);item.appendChild(ctrl);panel.appendChild(item);
+  });
+
+  sec('EDITOR FEATURES');
+  FEATURES.forEach(function(f){
+    var item=document.createElement('div');item.className='ext-item';
+    var icoEl=document.createElement('div');icoEl.className='ext-ico';icoEl.style.cssText='background:#2d2d2d;font-size:18px;line-height:1';icoEl.textContent=f.icon;
+    var info=document.createElement('div');info.className='ext-info';
+    info.innerHTML='<div class="ext-nm">'+esc(f.name)+'</div><div class="ext-ds">'+esc(f.desc)+'</div>';
+    var tog=document.createElement('button');tog.className='tbtn'+(A.ext[f.id]?' on':'');tog.title=(A.ext[f.id]?'Disable':'Enable')+' '+f.name;
+    tog.addEventListener('click',function(){A.ext[f.id]=!A.ext[f.id];applyExt();renderExtPanel();});
+    item.appendChild(icoEl);item.appendChild(info);item.appendChild(tog);panel.appendChild(item);
+  });
+
+  sec('EDITOR SETTINGS');
+  SETTINGS.forEach(function(s){
+    var item=document.createElement('div');item.className='ext-item';
+    var info=document.createElement('div');info.className='ext-info';info.style.flex='1';
+    info.innerHTML='<div class="ext-nm">'+esc(s.name)+'</div><div class="ext-ds">'+esc(s.desc)+'</div>';
+    var sel=document.createElement('select');sel.className='ext-sel';
+    s.opts.forEach(function(o){var op=document.createElement('option');op.value=o;op.textContent=o;if(A.ext[s.id]===o)op.selected=true;sel.appendChild(op);});
+    sel.addEventListener('change',function(){A.ext[s.id]=+this.value;applyExt();});
+    item.appendChild(info);item.appendChild(sel);panel.appendChild(item);
+  });
+}
+
+function applyTheme(theme,isLight){
+  if(theme!=='vscode-dark'){
+    var id='th-'+theme.replace(/\s/g,'-');
+    if(!document.getElementById(id)){
+      var lk=document.createElement('link');lk.id=id;lk.rel='stylesheet';
+      lk.href='https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/'+theme+'.min.css';
+      document.head.appendChild(lk);
+    }
+  }
+  if(CM){setTimeout(function(){CM.setOption('theme',theme);CM.refresh();},theme==='vscode-dark'?0:300);}
+}
+
+function applyExt(){
+  if(!CM)return;
+  CM.setOption('lineWrapping',A.ext.wordWrap);
+  CM.setOption('tabSize',A.ext.tabSize);
+  CM.setOption('indentUnit',A.ext.tabSize);
+  // Font size
+  $i('ec').style.fontSize=A.ext.fontSize+'px';CM.refresh();
+  // Whitespace
+  if(A.ext.showInvisible){
+    CM.setOption('specialChars',/[\t \u00a0\u2000-\u200a\u3000]/);
+    CM.setOption('specialCharPlaceholder',function(ch){var el=document.createElement('span');el.className='cm-invisible-char';el.textContent=ch==='\t'?'→':'·';return el;});
+  }else{
+    CM.setOption('specialChars',/[\u0000-\u0019\u00ad\u200b-\u200f\u2028\u2029\ufeff]/);
+    CM.setOption('specialCharPlaceholder',function(ch){var el=document.createElement('span');el.textContent='•';return el;});
+  }
+  // Relative line numbers
+  CM.setOption('lineNumberFormatter',A.ext.relLines?function(line){var cur=CM.getCursor().line+1;return line===cur?String(line):String(Math.abs(line-cur));}:function(line){return String(line);});
+  // Minimap
+  var mm=$i('mm');
+  var tab=getTab();
+  mm.style.display=(A.ext.minimap&&tab&&!tab.isBinary)?'block':'none';
+  if(A.ext.minimap)schedMM();
+  // Auto save
+  clearInterval(autoSvT);
+  if(A.ext.autoSave){autoSvT=setInterval(function(){if(A.dirty&&A.active){$i('cmi').value='Auto save';commitFile();}},30000);}
+  applyTheme(A.ext.theme,THEMES.find(function(t){return t.id===A.ext.theme;})||false);
+}
+
+// ── Minimap ────────────────────────────────────────────────────────
+function schedMM(){clearTimeout(mmT);mmT=setTimeout(drawMM,80);}
+
+function drawMM(){
+  if(!A.ext.minimap||!CM)return;
+  var wrap=$i('mm'),canvas=$i('mm-cv');
+  var wh=wrap.offsetHeight,ww=wrap.offsetWidth;
+  if(!wh||!ww)return;
+  canvas.width=ww;canvas.height=wh;
+  var ctx=canvas.getContext('2d');
+  ctx.fillStyle='#1a1a1a';ctx.fillRect(0,0,ww,wh);
+  var lines=CM.getValue().split('\n');var total=lines.length;
+  var lh=Math.max(0.8,wh/Math.max(total,1));
+  lines.forEach(function(line,i){
+    var trim=line.trimLeft();var indent=line.length-trim.length;var len=trim.length;
+    if(!len)return;
+    var x=Math.min(indent*1.2,ww*0.4);var w=Math.min(len*1.3,ww-x);
+    var alpha=Math.min(0.7,0.15+len/120);
+    ctx.fillStyle='rgba(100,160,220,'+alpha+')';
+    ctx.fillRect(x,i*lh,w,Math.max(lh-0.3,0.5));
+  });
+  var si=CM.getScrollInfo();
+  if(si.height>si.clientHeight){
+    var vTop=(si.top/si.height)*wh;var vH=(si.clientHeight/si.height)*wh;
+    ctx.fillStyle='rgba(255,255,255,0.07)';ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=1;
+    ctx.fillRect(0,vTop,ww,vH);ctx.strokeRect(0.5,vTop+0.5,ww-1,vH-1);
+  }
+}
+
+$i('mm').addEventListener('click',function(e){
+  if(!CM)return;
+  var rect=this.getBoundingClientRect();var y=e.clientY-rect.top;var ratio=y/rect.height;
+  var si=CM.getScrollInfo();CM.scrollTo(0,ratio*si.height);
+});
+
+// ── Sidebar panel switching ────────────────────────────────────────
+function showSbPanel(view){
+  $i('fe').style.display=view==='explorer'?'block':'none';
+  $i('ext-p').style.display=view==='extensions'?'flex':'none';
+  $i('sa-nf').style.display=view==='explorer'?'flex':'none';
+  $i('sa-nd').style.display=view==='explorer'?'flex':'none';
+  $i('sa-rf').style.display=view==='explorer'?'flex':'none';
+  $i('sa-cl').style.display=view==='explorer'?'flex':'none';
+  var titles={explorer:'Explorer',extensions:'Extensions',source:'Source Control'};
+  $i('sb-tl').textContent=titles[view]||view;
+}
+
+function toggleSb(view){
+  var sb=$i('sb');
+  if(A.sbView===view&&!sb.classList.contains('hide')){sb.classList.add('hide');}
+  else{sb.classList.remove('hide');A.sbView=view;showSbPanel(view);}
+  document.querySelectorAll('.ab').forEach(function(b){b.classList.remove('on');});
+  if(!sb.classList.contains('hide')){var m={explorer:'ab-ex',extensions:'ab-ext',source:'ab-src'};var id=m[view];if(id)$i(id).classList.add('on');}
+}
+
+// ── Event wiring ───────────────────────────────────────────────────
+$i('cn-btn').addEventListener('click',connect);
+$i('cmb').addEventListener('click',commitFile);
+$i('ab-ex').addEventListener('click',function(){toggleSb('explorer');});
+$i('ab-ext').addEventListener('click',function(){toggleSb('extensions');});
+$i('ab-src').addEventListener('click',function(){toggleSb('source');});
+$i('ab-prb').addEventListener('click',function(){var pp=$i('pp');pp.style.display=pp.style.display==='none'?'block':'none';});
+$i('ab-out').addEventListener('click',logout);
+$i('sa-nf').addEventListener('click',function(){if(A.token)startNew('file','',0,$i('fe'));});
+$i('sa-nd').addEventListener('click',function(){if(A.token)startNew('folder','',0,$i('fe'));});
+$i('sa-rf').addEventListener('click',function(){if(A.token)refreshTree();});
+$i('sa-cl').addEventListener('click',function(){if(A.token)refreshTree();});
+$i('tok').addEventListener('keydown',function(e){if(e.key==='Enter')$i('rep').focus();});
+$i('rep').addEventListener('keydown',function(e){if(e.key==='Enter')connect();});
+$i('cmi').addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&e.key==='Enter')commitFile();});
+document.addEventListener('click',function(e){if(!$i('ctx').contains(e.target))hideCtx();});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape')hideCtx();
+  if(e.key==='F2'&&ctxEl)renameUI(ctxEl);
+  if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key==='E'){e.preventDefault();toggleSb('explorer');}
+  if((e.ctrlKey||e.metaKey)&&e.key==='b'){e.preventDefault();toggleSb(A.sbView||'explorer');}
+});
+window.addEventListener('beforeunload',function(e){if(A.dirty){e.preventDefault();e.returnValue='';}});
+window.addEventListener('resize',schedMM);
+
+// ── Init ───────────────────────────────────────────────────────────
+initCM();
+renderExtPanel();
+showSbPanel('explorer');
+
+})();
+  </script>
+</body>
+
+</html>

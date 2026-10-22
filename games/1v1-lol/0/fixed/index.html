@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Load Remote HTML</title>
+</head>
+
+<body>
+    <h2>Loaded Page:</h2>
+    <iframe id="viewer" style="width:100%;height:100ch;border:1px solid #444;"></iframe>
+
+    <script>
+        useEffect(() => {
+            const script = document.createElement("script");
+            script.src = "https://cdn.jsdelivr.net/npm/eruda";
+            script.onload = () => {
+                if (window.eruda) {
+                    window.eruda.init();
+                }
+            };
+            document.body.appendChild(script);
+        }, []);
+
+        fetch("https://raw.githubusercontent.com/StaticQuasar931/1v1.Lol/refs/heads/main/index.html")
+            .then(res => res.text())
+            .then(html => {
+                const iframe = document.getElementById("viewer").contentWindow.document;
+                iframe.open();
+                iframe.write(html);
+                iframe.close();
+            })
+            .catch(err => console.error("Error:", err));
+    </script>
+</body>
+
+</html>

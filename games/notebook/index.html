@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Useful Notebook</title>
+    <style>
+        * {
+            --col: rgba(220, 220, 220);
+            font-family: sans-serif;
+            scrollbar-color: rgb(220, 220, 220) transparent;
+            /*/backdrop-filter: initial !important;/*/
+        }
+
+        html,
+        body {
+            background-color: black;
+            color: var(--col)
+        }
+
+        #location {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 8px;
+            line-height: 1rem;
+            height: 1rem;
+            border-radius: 0.2rem;
+            display: inline-block;
+            pointer-events: none;
+            user-select: none;
+            position: fixed;
+            z-index: 255;
+        }
+
+        #nodeContainer {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .node[data-grabbing] * {
+            cursor: grabbing;
+            user-select: none;
+            outline: 0;
+            caret-color: transparent;
+        }
+
+        .node {
+            background-color: color-mix(in srgb, var(--colordata) 10%, transparent);
+            border: 1px solid var(--colordata);
+            backdrop-filter: blur(9px);
+            position: absolute;
+            border-radius: 0.5rem;
+            min-width: 5rem;
+            min-height: 5rem;
+            resize: both;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            width: 5rem;
+            height: 5rem;
+        }
+
+        .aTitle {
+            padding-left: 5px;
+            width: 100vw;
+            height: 2rem;
+            display: inline-block;
+            line-height: 2rem;
+            font-size: 1.6rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            cursor: grab;
+            white-space: nowrap;
+            overflow-y: hidden;
+            outline: 0 !important;
+        }
+
+        .node:not(.subordinate) {
+            box-shadow: 0px 0px 12px 1px color-mix(in srgb, var(--colordata) 50%, transparent);
+        }
+
+        :root.printmode .node {
+            --colordata: black !important;
+            text-shadow: none !important;
+            color: black !important;
+            backdrop-filter: none;
+            background-color: rgb(230,230,230) !important;
+        }
+        :root.printmode .aTitle {
+            backdrop-filter: none;
+            background-color: rgb(210,210,210) !important;
+        }
+        :root.printmode .editor, :root.printmode .editor * {
+            text-shadow: none !important;
+            background-color: transparent !important;
+        }
+        :root.printmode .node a {
+            color: rgb(31, 56, 84) !important;
+        }
+        :root.printmode svg line {
+            stroke: black !important;
+        }
+        :root.printmode, :root.printmode body {
+            background-color: white !important;
+        }
+
+        .subordinate {
+            z-index: -1;
+        }
+
+        .editor {
+            padding-left: 4px;
+            display: block;
+            height: calc(100% - 2rem);
+            overflow-x: hidden;
+            overflow-y: scroll;
+            outline: none !important;
+            text-shadow: 0px 0px 2px rgba(0,0,0,0.25);
+        }
+
+        .editor[contenteditable="true"], .editor[contenteditable="true"] * {
+            font-size: 0.75rem;
+            font-family: monospace !important;
+            text-shadow: 0px 0px 3px rgba(0,0,0,0.75);
+        }
+
+        .editor[contenteditable="true"] {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
+        a {
+            color: lightblue;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: white;
+        }
+    
+
+        #svg {
+            position: fixed;
+            display: block;
+            width: 100vw;
+            left: 0;
+            top: 0;
+            height: 100vh;
+        }
+
+        :root.printmode code {
+            background-color: transparent !important;
+            border: 1px solid black;
+            padding: 1px !important;
+        }
+
+        code {
+            font-family: monospace !important;
+            background-color: rgb(165 255 255 / 10%);
+            padding: 2px;
+            border-radius: 4px;
+            position: relative;
+            top: -2px;
+            transition: background-color 0.3s;
+        }
+
+        code:hover {
+            background-color: rgb(165 255 255 / 20%);
+        }
+
+        pre>code {
+            display: block;
+        }
+
+        thead {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        table {
+            border-top: 1px solid white;
+            border-left: 1px solid white;
+            border-collapse: collapse;
+            margin-right: 3px;
+        }
+
+        td,
+        thead>tr>th {
+            padding: 0.25rem 0.5rem;
+            border-right: 1px solid white;
+        }
+
+        tr {
+            border-bottom: 1px solid white;
+        }
+    </style>
+</head>
+
+<body>
+    <span id="location">root / note 1 / note 2</span>
+    <svg id="svg">
+
+    </svg>
+    <div id="nodeContainer">
+
+    </div>
+    <script src="script.js"></script>
+    <script id="markedjs" src="marked.js"></script>
+</body>
+
+</html>

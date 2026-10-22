@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+  <!-- Charset & Viewport -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Canonical & Robots -->
+  <link rel="canonical" href="https://staticquasar931.github.io/1v1.Lol/" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+
+  <!-- Title & Favicon -->
+  <title>1v1.LOL Unblocked</title>
+  <link id="dynamicFavicon" rel="icon" type="image/jpeg"
+    href="https://res.cloudinary.com/dcsrqennd/image/upload/v1759188682/1v1.lol_Favicon_zv2lxo.jpg" />
+
+  <!-- Primary SEO -->
+  <meta name="description"
+    content="Play 1v1.LOL unblocked — fast build-and-shoot duels in your browser. Free, fullscreen, and school-safe on Chromebook, PC, and mobile." />
+  <meta name="keywords"
+    content="1v1.lol, 1v1 lol, 1v1.lol unblocked, 1v1 unblocked, build and shoot, browser shooter, school safe games, Chromebook games, StaticQuasar931" />
+  <meta name="theme-color" content="#000000" />
+
+  <!-- Social / Open Graph -->
+  <meta property="og:title" content="1v1.LOL Unblocked | StaticQuasar931" />
+  <meta property="og:description" content="Fast 1v1 duels with building — free, fullscreen, and school-safe." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://staticquasar931.github.io/1v1.Lol/" />
+  <meta property="og:image"
+    content="https://res.cloudinary.com/dcsrqennd/image/upload/v1759188642/1v1_Lol_StaticQuasar931_xrplna.png" />
+  <meta property="og:image:alt" content="1v1.LOL gameplay banner (StaticQuasar931)" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image"
+    content="https://res.cloudinary.com/dcsrqennd/image/upload/v1759188642/1v1_Lol_StaticQuasar931_xrplna.png" />
+  <meta name="twitter:image:alt" content="1v1.LOL gameplay banner (StaticQuasar931)" />
+
+  <!-- Preload hero and UI images -->
+  <link rel="preload" as="image"
+    href="https://res.cloudinary.com/dcsrqennd/image/upload/v1759188642/1v1_Lol_StaticQuasar931_xrplna.png" />
+  <link rel="preload" as="image" href="https://res.cloudinary.com/dcsrqennd/image/upload/v1747533056/raw_um4pvq.png" />
+  <link rel="preload" as="image"
+    href="https://res.cloudinary.com/dcsrqennd/image/upload/v1758072526/Join_Our_Discord_StaticQuassar931_lcplrf.png" />
+  <link rel="preload" as="image" href="https://res.cloudinary.com/dcsrqennd/image/upload/v1747533158/raw_cw34yi.png" />
+
+  <!-- Origin trials kept (from your working reference) -->
+  <meta http-equiv="origin-trial"
+    content="A9AxgGSwmnfgzzkyJHILUr3H8nJ/3D+57oAsL4DBt4USlng4jZ0weq+fZtHC/Qwwn6gd4QSa5DzT3OBif+kXVA0AAAB4eyJvcmlnaW4iOiJodHRwczovL2ltYXNkay5nb29nbGVhcGlzLmNvbTo0NDMiLCJmZWF0dXJlIjoiUHJpdmFjeVNhbmRib3hBZHNBUElzIiwiZXhwaXJ5IjoxNjk1MTY3OTk5LCJpc1RoaXJkUGFydHkiOnRydWV9">
+  <meta http-equiv="origin-trial"
+    content="AlK2UR5SkAlj8jjdEc9p3F3xuFYlF6LYjAML3EOqw1g26eCwWPjdmecULvBH5MVPoqKYrOfPhYVL71xAXI1IBQoAAAB8eyJvcmlnaW4iOiJodHRwczovL2RvdWJsZWNsaWNrLm5ldDo0NDMiLCJmZWF0dXJlIjoiV2ViVmlld1hSZXF1ZXN0ZWRXaXRoRGVwcmVjYXRpb24iLCJleHBpcnkiOjE3NTgwNjcxOTksImlzU3ViZG9tYWluIjp0cnVlfQ==">
+
+  <style>
+    :root {
+      --brand: #5ee1ff;
+      --brand2: #9bffb7;
+      --panel: #0b0b0f;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .4);
+      --glow: 0 0 12px rgba(94, 225, 255, .65), 0 0 32px rgba(155, 255, 183, .35);
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #000;
+      color: #e8f3ff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow: hidden
+    }
+
+    /* Game container (full viewport) */
+    .webgl-content {
+      position: fixed;
+      inset: 0;
+      display: block
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: #000;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%
+    }
+
+    /* Static menu (top-left) */
+    #staticMenu {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 30;
+      background: linear-gradient(135deg, rgba(20, 20, 28, .9), rgba(20, 20, 28, .6));
+      border: 1px solid rgba(94, 225, 255, .35);
+      border-radius: 12px;
+      padding: 8px 12px;
+      box-shadow: var(--glow), var(--shadow);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      transform: translateX(-18px);
+      opacity: 0;
+      animation: menuEnter .8s cubic-bezier(.21, .9, .29, 1) .25s forwards;
+      user-select: none
+    }
+
+    #staticMenu a {
+      color: #9bffb7;
+      text-decoration: none;
+      font-weight: 700
+    }
+
+    #staticMenu button {
+      background: rgba(255, 255, 255, .06);
+      color: #e8f3ff;
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 8px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-weight: 700
+    }
+
+    @keyframes menuEnter {
+      to {
+        transform: translateX(0);
+        opacity: 1
+      }
+    }
+
+    /* Slide-in quick links (bottom-right) — images as-is (no circle, no crop) */
+    #slideRotator {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 25;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateX(110px) scale(.96);
+      width: auto;
+      height: auto;
+    }
+
+    #slideRotator a {
+      display: inline-block;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      pointer-events: auto;
+    }
+
+    #slideRotator img {
+      display: block;
+      max-width: 120px;
+      height: auto;
+      object-fit: contain;
+      background: transparent;
+    }
+
+    .slideInRight2s {
+      animation: slideInRight2s 2s ease forwards;
+    }
+
+    .slideOutRight2s {
+      animation: slideOutRight2s 2s ease forwards;
+    }
+
+    @keyframes slideInRight2s {
+      from {
+        opacity: 0;
+        transform: translateX(110px) scale(.96)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0) scale(1)
+      }
+    }
+
+    @keyframes slideOutRight2s {
+      from {
+        opacity: 1;
+        transform: translateX(0) scale(1)
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(110px) scale(.96)
+      }
+    }
+
+    #slideRotator a:hover {
+      transform: translateY(-2px);
+      transition: transform .18s ease;
+    }
+
+    /* Top-right Favicon Switcher (Aeries option) */
+    #topRightMenuWrap {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      transform: translateY(-12px);
+      opacity: 0;
+      animation: enterTR .6s cubic-bezier(.21, .9, .29, 1) .35s forwards;
+    }
+
+    @keyframes enterTR {
+      to {
+        transform: translateY(0);
+        opacity: 1
+      }
+    }
+
+    #menuButton {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(94, 225, 255, .35);
+      background: linear-gradient(135deg, rgba(20, 20, 28, .85), rgba(20, 20, 28, .55));
+      color: #e8f3ff;
+      box-shadow: var(--glow), var(--shadow);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    #dropdown {
+      display: none;
+      min-width: 280px;
+      max-width: 320px;
+      background: linear-gradient(135deg, rgba(15, 15, 22, .96), rgba(15, 15, 22, .8));
+      border: 1px solid rgba(255, 255, 255, .15);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 8px;
+    }
+
+    #dropdown .notice {
+      margin: 6px 6px 10px;
+      font-size: 12px;
+      color: #cde7ff;
+      opacity: .9;
+    }
+
+    #dropdown button[role="menuitem"] {
+      width: 100%;
+      text-align: left;
+      background: #12121a;
+      color: #eef7ff;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin: 6px 0;
+      cursor: pointer;
+      transition: transform .12s ease, background .12s ease;
+    }
+
+    #dropdown button[role="menuitem"]:hover {
+      transform: translateY(-1px);
+      background: #171725;
+    }
+
+    .opt-title {
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    #restoreHint {
+      display: none;
+      color: #e8f3ff;
+      background: rgba(0, 0, 0, .45);
+      padding: 6px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, .15);
+      position: fixed;
+      top: 60px;
+      right: 12px;
+      z-index: 41;
+    }
+
+    /* Global toggle: hide all Static UI with Y+U+I */
+    .menus-hidden #staticMenu,
+    .menus-hidden #slideRotator,
+    .menus-hidden #topRightMenuWrap {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      transition: opacity .35s ease, visibility .35s ease;
+    }
+
+    /* Basic cleanup from the reference */
+    #button {
+      display: none !important;
+    }
+
+    /* classroom6x */
+  </style>
+</head>
+
+<body>
+  <!-- Static Branding Menu (top-left) -->
+  <div id="staticMenu" aria-label="Static menu">
+    <a href="https://sites.google.com/view/staticquasar931/gm3z" target="_blank" rel="noopener">More Unblocked Games by
+      Static</a>
+    <button id="hideStaticMenu" title="Hide for 3 minutes">✕</button>
+  </div>
+  <script>
+    useEffect(() => {
+      const script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/eruda";
+      script.onload = () => {
+        if (window.eruda) {
+          window.eruda.init();
+        }
+      };
+      document.body.appendChild(script);
+    }, []);
+
+  </script>
+  <!-- Slide-in quick links (bottom-right): Google Form → Discord → Instagram -->
+  <div id="slideRotator" aria-label="Quick links">
+    <a id="slideLink" href="https://sites.google.com/view/staticquasar931/google-form" target="_blank" rel="noopener">
+      <img id="slideImg" alt="Open StaticQuasar931 Google Form (feedback & requests)" />
+    </a>
+  </div>
+
+  <!-- Top-right Favicon/Title Options -->
+  <div id="topRightMenuWrap" aria-label="Options menu (favicon & title)">
+    <button id="menuButton" aria-haspopup="true" aria-expanded="false">☰ Options</button>
+    <div id="dropdown" role="menu" aria-label="Options dropdown">
+      <button id="optMainFavicon" role="menuitem">
+        <div class="opt-title">Use/Keep 1v1.LOL Favicon + Title</div>
+        <small>Sets the 1v1.LOL icon and “1v1.LOL Unblocked | StaticQuasar931”.</small>
+      </button>
+      <button id="optAeries" role="menuitem">
+        <div class="opt-title">Switch to “Aeries Student Dashboard”</div>
+        <small>Changes page title & favicon to the Aeries variant.</small>
+      </button>
+      <button id="optHideMenu" role="menuitem">
+        <div class="opt-title">Hide This Menu</div>
+        <small>Hides the button & dropdown. Press <b>O+P</b> to bring it back.</small>
+      </button>
+    </div>
+  </div>
+  <div id="restoreHint" aria-live="polite">Menu hidden — press <b>O+P</b> to show</div>
+
+  <!-- Game -->
+  <div class="webgl-content">
+    <div id="gameContainer">
+      <canvas id="#canvas" style="width:100%; height:100%;"></canvas>
+      <div class="logo Dark"></div>
+      <div class="progress Dark">
+        <div class="empty"></div>
+        <div class="full"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden SEO block -->
+  <div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap"
+    aria-hidden="true">
+    <h1>1v1.LOL – Unblocked Build & Shoot Duels</h1>
+    <p><strong>1v1.LOL</strong> is a fast build-and-shoot arena. Battle in quick duels, practice your edits, and climb
+      the leaderboard — all free in your browser on the StaticQuasar931 site. Fully <strong>unblocked</strong> and
+      <strong>school-safe</strong> for Chromebook, PC, and mobile.
+    </p>
+  </div>
+  <!-- ===== Required game assets (kept from your working reference) ===== -->
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/ferialoken937373/clever@c91366f7f0a51bfccdb966a5cabcc39add3807ac/projects/rockpaperscissors/exercise/style.css">
+  <script
+    src="https://cdn.jsdelivr.net/gh/ferialoken937373/clever@c91366f7f0a51bfccdb966a5cabcc39add3807ac/projects/rockpaperscissors/exercise/UnityProgress.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/gh/ferialoken937373/clever@c91366f7f0a51bfccdb966a5cabcc39add3807ac/projects/rockpaperscissors/exercise/2.7.js"></script>
+
+  <!-- Firebase libs (kept to avoid runtime errors from the build) -->
+  <script
+    src="https://cdn.jsdelivr.net/gh/ferialoken937373/clever@39a90cb9cfb043b6e47becd5ba0410ed2092d5a6/projects/rockpaperscissors/exercise/1firebase-app.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/gh/ferialoken937373/clever@39a90cb9cfb043b6e47becd5ba0410ed2092d5a6/projects/rockpaperscissors/exercise/1firebase-auth.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/gh/ferialoken937373/clever@39a90cb9cfb043b6e47becd5ba0410ed2092d5a6/projects/rockpaperscissors/exercise/1firebase-firestore.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/gh/ferialoken937373/clever@39a90cb9cfb043b6e47becd5ba0410ed2092d5a6/projects/rockpaperscissors/exercise/1firebase.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/gh/ferialoken937373/clever@39a90cb9cfb043b6e47becd5ba0410ed2092d5a6/projects/rockpaperscissors/exercise/1login.js?v=2"></script>
+  <script
+    src="https://cdn.jsdelivr.net/gh/ferialoken937373/clever@39a90cb9cfb043b6e47becd5ba0410ed2092d5a6/projects/rockpaperscissors/exercise/1firestore.js"></script>
+
+  <!-- jQuery (required by reference build) -->
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+
+  <!-- ===== Page logic (UI + game autostart) ===== -->
+  <script>
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/eruda";
+    script.onload = () => {
+      if (window.eruda) {
+        window.eruda.init();
+      }
+    };
+    document.body.appendChild(script);
+
+    // --- Autostart game (no click) ---
+    let gameInstance = null;
+    function startGame() {
+      if (gameInstance) return;
+      try {
+        gameInstance = UnityLoader.instantiate(
+          "gameContainer",
+          "https://cdn.jsdelivr.net/gh/ferialoken937373/clever@8424f74721ca8bb284b77c2b9f232b94171fe2e2/projects/rockpaperscissors/exercise/2.7.json",
+          {
+            onProgress: UnityProgress,
+            Module: { onRuntimeInitialized: function () { UnityProgress(gameInstance, "complete"); } }
+          }
+        );
+      } catch (e) { console.error("Unity instantiate failed:", e); }
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", startGame);
+    } else { startGame(); }
+
+    // --- Static menu close (3 minutes) ---
+    (function () {
+      const menu = document.getElementById("staticMenu");
+      const btn = document.getElementById("hideStaticMenu");
+      const KEY = 'sq931_static_menu_hidden_until';
+      const restore = () => { menu.style.display = 'flex'; };
+      const maybeHide = () => {
+        const until = parseInt(localStorage.getItem(KEY) || '0', 10);
+        const now = Date.now();
+        if (until && now < until) { menu.style.display = 'none'; setTimeout(restore, until - now); }
+      };
+      if (btn) {
+        btn.onclick = () => { menu.style.display = 'none'; const until = Date.now() + 180000; localStorage.setItem(KEY, String(until)); setTimeout(restore, 180000); };
+      }
+      maybeHide();
+    })();
+
+    // --- Slide-in rotator (no crop / no circle) ---
+    (function () {
+      const slides = [
+        {
+          src: "https://res.cloudinary.com/dcsrqennd/image/upload/v1747533056/raw_um4pvq.png",
+          alt: "Open StaticQuasar931 Google Form (feedback & requests)", link: "https://sites.google.com/view/staticquasar931/google-form"
+        },
+        {
+          src: "https://res.cloudinary.com/dcsrqennd/image/upload/v1758072526/Join_Our_Discord_StaticQuassar931_lcplrf.png",
+          alt: "Join the StaticQuasar931 Discord", link: "https://discord.gg/DP2hM7RRhR"
+        },
+        {
+          src: "https://res.cloudinary.com/dcsrqennd/image/upload/v1747533158/raw_cw34yi.png",
+          alt: "Follow on Instagram", link: "https://www.instagram.com/freeschoolgamepage/"
+        }
+      ];
+      const rot = document.getElementById("slideRotator");
+      const link = document.getElementById("slideLink");
+      const img = document.getElementById("slideImg");
+      if (!rot || !link || !img) return;
+
+      const preload = (u) => new Promise(res => { const i = new Image(); i.onload = i.onerror = res; i.src = u; });
+      Promise.all(slides.map(s => preload(s.src))).then(() => {
+        let i = 0;
+        const T_IN = 2000, T_SHOW = 5000, T_OUT = 2000, T_HIDE = 20000;
+        function step() {
+          const s = slides[i];
+          img.src = s.src; img.alt = s.alt; link.href = s.link;
+          rot.classList.remove("slideOutRight2s");
+          rot.classList.add("slideInRight2s");
+          rot.style.pointerEvents = "auto";
+          setTimeout(() => {
+            rot.classList.remove("slideInRight2s");
+            rot.classList.add("slideOutRight2s");
+            setTimeout(() => {
+              rot.style.pointerEvents = "none";
+              setTimeout(() => { i = (i + 1) % slides.length; step(); }, T_HIDE);
+            }, T_OUT);
+          }, T_IN + T_SHOW);
+        }
+        step();
+      });
+    })();
+
+    // --- Favicon & Title options (Aeries) ---
+    (function () {
+      const wrap = document.getElementById('topRightMenuWrap');
+      const btn = document.getElementById('menuButton');
+      const dd = document.getElementById('dropdown');
+      const optMain = document.getElementById('optMainFavicon');
+      const optAeries = document.getElementById('optAeries');
+      const optHide = document.getElementById('optHideMenu');
+      const restore = document.getElementById('restoreHint');
+      const hereLink = document.getElementById('liveHereLink');
+
+      const MAIN_ICON = "https://res.cloudinary.com/dcsrqennd/image/upload/v1759188682/1v1.lol_Favicon_zv2lxo.jpg";
+      const AERIES_ICON = "https://res.cloudinary.com/dcsrqennd/image/upload/v1758857231/Aeries_Favicon_Real_StaticQuasar931_m1uorx.ico";
+      const MAIN_TITLE = "1v1.LOL Unblocked | StaticQuasar931";
+      const AERIES_TITLE = "Aeries Student Dashboard";
+
+      function setFavicon(url) {
+        let link = document.getElementById('dynamicFavicon') || document.querySelector('link[rel="icon"]');
+        if (!link) { link = document.createElement('link'); link.rel = 'icon'; link.id = 'dynamicFavicon'; document.head.appendChild(link); }
+        link.type = /\.webp(\?|$)/i.test(url) ? 'image/webp' : (/\.png(\?|$)/i.test(url) ? 'image/png' : 'image/jpeg');
+        link.href = url;
+      }
+      function closeDropdown() { dd.style.display = 'none'; btn.setAttribute('aria-expanded', 'false'); }
+      function toggleDropdown() {
+        const open = dd.style.display === 'block';
+        dd.style.display = open ? 'none' : 'block';
+        btn.setAttribute('aria-expanded', String(!open));
+      }
+
+      if (hereLink) hereLink.href = "https://staticquasar931.github.io/1v1.Lol/";
+      setFavicon(MAIN_ICON);
+
+      btn.addEventListener('click', (e) => { e.stopPropagation(); toggleDropdown(); });
+      document.addEventListener('click', () => closeDropdown());
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDropdown(); });
+
+      optMain.addEventListener('click', () => { setFavicon(MAIN_ICON); document.title = MAIN_TITLE; closeDropdown(); });
+      optAeries.addEventListener('click', () => { setFavicon(AERIES_ICON); document.title = AERIES_TITLE; closeDropdown(); });
+
+      optHide.addEventListener('click', () => {
+        wrap.style.display = 'none';
+        restore.style.display = 'block';
+        closeDropdown();
+        setTimeout(() => { restore.style.display = 'none'; }, 4000);
+      });
+
+      // Restore with O+P
+      const down = new Set();
+      function checkRestore() {
+        if (down.has('o') && down.has('p')) {
+          wrap.style.display = 'block';
+          restore.style.display = 'none';
+        }
+      }
+      window.addEventListener('keydown', (e) => { down.add((e.key || '').toLowerCase()); checkRestore(); });
+      window.addEventListener('keyup', (e) => { down.delete((e.key || '').toLowerCase()); });
+      window.addEventListener('blur', () => down.clear());
+    })();
+
+    // --- Global Y+U+I toggle for Static UI ---
+    (function () {
+      const down = new Set();
+      const check = () => { if (down.has('y') && down.has('u') && down.has('i')) document.body.classList.toggle('menus-hidden'); };
+      addEventListener('keydown', e => { down.add((e.key || '').toLowerCase()); check(); });
+      addEventListener('keyup', e => { down.delete((e.key || '').toLowerCase()); });
+      addEventListener('blur', () => down.clear());
+    })();
+
+    // --- Gentle unload warning (optional safety) ---
+    window.onbeforeunload = function (e) {
+      e = e || window.event;
+      const msg = "Leave this page? Your session may stop.";
+      if (e) e.returnValue = msg;
+      return msg;
+    };
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,2342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Tycoon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #main-menu, #world-gen-menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        #world-gen-menu {
+            display: none;
+        }
+
+        #main-menu h1, #world-gen-menu h1 {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        .menu-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            margin: 10px;
+            font-size: 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .world-settings {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            min-width: 400px;
+        }
+
+        .setting-group {
+            margin-bottom: 20px;
+        }
+
+        .setting-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+            color: #ffd700;
+        }
+
+        .setting-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #444;
+            outline: none;
+        }
+
+        .setting-group input[type="range"]::-webkit-slider-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        .setting-value {
+            display: inline-block;
+            margin-left: 10px;
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        #game-container {
+            display: none;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        #hud {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #stats {
+            display: flex;
+            gap: 30px;
+            font-size: 1.2rem;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #5568d3;
+        }
+
+        #game-area {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        #grid-container {
+            flex: 1;
+            overflow: auto;
+            background: #2a2a2a;
+            position: relative;
+        }
+
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(30, 50px);
+            grid-template-rows: repeat(30, 50px);
+            gap: 1px;
+            background: #1a1a1a;
+            padding: 20px;
+            width: fit-content;
+        }
+
+        .cell {
+            width: 50px;
+            height: 50px;
+            background: #3a3a3a;
+            border: 1px solid #4a4a4a;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .cell:hover {
+            background: #4a4a4a;
+        }
+
+        .cell.selected-building {
+            outline: 3px solid #ffd700;
+            outline-offset: -3px;
+            box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .cell.ore {
+            background: #3a3a3a;
+            position: relative;
+        }
+
+        .ore-deposit {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .ore-deposit.common {
+            background: radial-gradient(circle at 30% 30%, #a8a8a8, #6b6b6b);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 10px rgba(168, 168, 168, 0.3);
+        }
+
+        .ore-deposit.uncommon {
+            background: radial-gradient(circle at 30% 30%, #4ade80, #22c55e);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 15px rgba(74, 222, 128, 0.4);
+        }
+
+        .ore-deposit.rare {
+            background: radial-gradient(circle at 30% 30%, #60a5fa, #3b82f6);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 15px rgba(96, 165, 250, 0.5);
+        }
+
+        .ore-deposit.epic {
+            background: radial-gradient(circle at 30% 30%, #a78bfa, #8b5cf6);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(167, 139, 250, 0.6);
+        }
+
+        .ore-deposit.legendary {
+            background: radial-gradient(circle at 30% 30%, #fbbf24, #f59e0b);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 25px rgba(251, 191, 36, 0.7);
+            animation: legendary-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes legendary-glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        .cell.conveyor {
+            background: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cell.seller {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .cell.smelter {
+            background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .smelter-active {
+            animation: smelter-heat 1s ease-in-out infinite;
+        }
+
+        @keyframes smelter-heat {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.4); }
+        }
+
+        .arrow {
+            font-size: 1.8rem;
+            color: #ffd700;
+        }
+
+        .item-on-conveyor {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+            z-index: 10;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            pointer-events: none;
+        }
+
+        .item-common {
+            background: radial-gradient(circle at 30% 30%, #d4d4d4, #9ca3af);
+        }
+
+        .item-uncommon {
+            background: radial-gradient(circle at 30% 30%, #6ee7b7, #34d399);
+        }
+
+        .item-rare {
+            background: radial-gradient(circle at 30% 30%, #93c5fd, #60a5fa);
+        }
+
+        .item-epic {
+            background: radial-gradient(circle at 30% 30%, #c4b5fd, #a78bfa);
+        }
+
+        .item-legendary {
+            background: radial-gradient(circle at 30% 30%, #fcd34d, #fbbf24);
+            animation: item-legendary-glow 1s ease-in-out infinite;
+        }
+
+        .item-smelted {
+            background: radial-gradient(circle at 30% 30%, #fca5a5, #ef4444);
+            border-color: #fbbf24;
+        }
+
+        @keyframes item-legendary-glow {
+            0%, 100% { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); }
+            50% { box-shadow: 0 2px 15px rgba(251, 191, 36, 0.8); }
+        }
+
+        #shop {
+            width: 320px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #shop h2 {
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+
+        .shop-category {
+            margin-bottom: 25px;
+        }
+
+        .shop-category h3 {
+            color: #a78bfa;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .shop-item {
+            background: #333;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .shop-item:hover {
+            background: #444;
+            border-color: #667eea;
+        }
+
+        .shop-item.selected {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .shop-item h4 {
+            margin-bottom: 3px;
+            color: #ffd700;
+            font-size: 0.95rem;
+        }
+
+        .shop-item p {
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 3px;
+        }
+
+        .price {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        #building-info {
+            background: rgba(0, 0, 0, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px solid #ffd700;
+            display: none;
+        }
+
+        #building-info h3 {
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .building-stat {
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+
+        .building-stat strong {
+            color: #fff;
+        }
+
+        .upgrade-building-btn {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+
+        .upgrade-building-btn:hover {
+            background: #5568d3;
+        }
+
+        .upgrade-building-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .level-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            z-index: 5;
+        }
+
+        #message {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .seller-count, .smelter-count {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .ore-label {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            z-index: 5;
+        }
+
+        .ore-label.common { color: #d4d4d4; }
+        .ore-label.uncommon { color: #6ee7b7; }
+        .ore-label.rare { color: #93c5fd; }
+        .ore-label.epic { color: #c4b5fd; }
+        .ore-label.legendary { color: #fcd34d; }
+
+        .cell.converter {
+            background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .cell.research-center {
+            background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+        }
+
+        .research-center-active {
+            animation: research-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes research-glow {
+            0%, 100% { 
+                box-shadow: inset 0 0 20px rgba(167, 139, 250, 0.5);
+            }
+            50% { 
+                box-shadow: inset 0 0 40px rgba(167, 139, 250, 0.9);
+            }
+        }
+
+        .cell.battery {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            position: relative;
+        }
+
+        .battery-level {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 0%;
+            width: 100%;
+            background: rgba(34, 197, 94, 0.6);
+            transition: height 0.3s ease;
+            z-index: 1;
+        }
+
+        .cell.wire {
+            background: #666;
+            position: relative;
+        }
+
+        .wire-line {
+            position: absolute;
+            background: #fbbf24;
+            z-index: 5;
+        }
+
+        .wire-line.horizontal {
+            height: 4px;
+            width: 100%;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+
+        .wire-line.vertical {
+            width: 4px;
+            height: 100%;
+            left: 50%;
+            top: 0;
+            transform: translateX(-50%);
+        }
+
+        .wire-powered {
+            box-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+        }
+
+        .energy-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #fbbf24;
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+            z-index: 6;
+            pointer-events: none;
+        }
+
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 4px;
+            background: #4ade80;
+            transition: width 0.3s linear;
+            z-index: 8;
+        }
+
+        .pollution-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(139, 69, 19, 0.3);
+            pointer-events: none;
+            z-index: 7;
+            display: none;
+        }
+
+        .cell.polluted .pollution-overlay {
+            display: block;
+        }
+
+        #research-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 2000;
+            display: none;
+            border: 2px solid #667eea;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
+        }
+
+        .research-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .research-header h2 {
+            color: #ffd700;
+            font-size: 2rem;
+        }
+
+        .research-item {
+            background: #2a2a2a;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 2px solid #444;
+        }
+
+        .research-item.unlocked {
+            border-color: #4ade80;
+            opacity: 0.6;
+        }
+
+        .research-item.locked {
+            border-color: #ef4444;
+        }
+
+        .research-item h3 {
+            color: #a78bfa;
+            margin-bottom: 8px;
+        }
+
+        .research-item p {
+            color: #aaa;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .research-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+        }
+
+        .research-cost {
+            color: #60a5fa;
+            font-weight: bold;
+        }
+
+        .research-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .research-btn:hover {
+            background: #5568d3;
+        }
+
+        .research-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        #converter-config {
+            background: rgba(0, 0, 0, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            border: 2px solid #34d399;
+            display: none;
+        }
+
+        #converter-config h4 {
+            color: #34d399;
+            margin-bottom: 15px;
+        }
+
+        .converter-recipe {
+            background: #333;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .converter-recipe:hover {
+            background: #444;
+            border-color: #34d399;
+        }
+
+        .converter-recipe.selected {
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .converter-recipe h5 {
+            color: #4ade80;
+            margin-bottom: 5px;
+        }
+
+        .converter-recipe p {
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .tax-notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: rgba(239, 68, 68, 0.95);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            display: none;
+            z-index: 1001;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .pollution-indicator {
+            color: #fb923c;
+            font-weight: bold;
+        }
+
+        .pollution-high {
+            color: #ef4444;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+    </style>
+</head>
+<body>
+    <div id="main-menu">
+        <h1>🏭 Factory Tycoon</h1>
+        <button class="menu-btn" onclick="showWorldGen()">New Game</button>
+        <button class="menu-btn" onclick="loadGame()">Load Game</button>
+    </div>
+
+    <div id="world-gen-menu">
+        <h1>🌍 World Generation</h1>
+        <div class="world-settings">
+            <div class="setting-group">
+                <label>Ore Spawn Rate: <span class="setting-value" id="ore-rate-display">5%</span></label>
+                <input type="range" id="ore-rate" min="1" max="15" value="5" oninput="updateSettingDisplay()">
+            </div>
+            <div class="setting-group">
+                <label>Starting Money: <span class="setting-value" id="money-display">$100</span></label>
+                <input type="range" id="starting-money" min="50" max="500" step="50" value="100" oninput="updateSettingDisplay()">
+            </div>
+            <div class="setting-group">
+                <label>Grid Size: <span class="setting-value" id="grid-size-display">30x30</span></label>
+                <input type="range" id="grid-size" min="20" max="50" step="5" value="30" oninput="updateSettingDisplay()">
+            </div>
+            <div class="setting-group">
+                <label>Rare Ore Chance: <span class="setting-value" id="rare-chance-display">Medium</span></label>
+                <input type="range" id="rare-chance" min="1" max="3" value="2" oninput="updateSettingDisplay()">
+            </div>
+        </div>
+        <button class="menu-btn" onclick="startNewGame()">Start Game</button>
+        <button class="menu-btn" onclick="backToMenu()">Back</button>
+    </div>
+
+    <div id="game-container">
+        <div id="hud">
+            <div id="stats">
+                <div class="stat">💰 Money: $<span id="money">100</span></div>
+                <div class="stat">📦 Items Sold: <span id="items-sold">0</span></div>
+                <div class="stat">🔬 Research: <span id="research-points">0</span></div>
+                <div class="stat">🏭 Pollution: <span id="pollution-level" class="pollution-indicator">0%</span></div>
+            </div>
+            <div id="controls">
+                <button class="control-btn" onclick="toggleResearch()" style="background: #a78bfa;">🔬 Research</button>
+                <button class="control-btn" onclick="saveGame()">💾 Save</button>
+                <button class="control-btn" onclick="returnToMenu()">🏠 Menu</button>
+            </div>
+        </div>
+        
+        <div id="game-area">
+            <div id="grid-container">
+                <div id="grid"></div>
+            </div>
+            
+            <div id="shop">
+                <h2>🛒 Build Shop</h2>
+                
+                <div class="shop-category">
+                    <h3>Conveyors</h3>
+                    <div class="shop-item" data-type="conveyor-right" data-price="10">
+                        <h4>→ Right</h4>
+                        <p class="price">$10</p>
+                    </div>
+                    <div class="shop-item" data-type="conveyor-left" data-price="10">
+                        <h4>← Left</h4>
+                        <p class="price">$10</p>
+                    </div>
+                    <div class="shop-item" data-type="conveyor-up" data-price="10">
+                        <h4>↑ Up</h4>
+                        <p class="price">$10</p>
+                    </div>
+                    <div class="shop-item" data-type="conveyor-down" data-price="10">
+                        <h4>↓ Down</h4>
+                        <p class="price">$10</p>
+                    </div>
+                </div>
+
+                <div class="shop-category">
+                    <h3>Processing</h3>
+                    <div class="shop-item" data-type="smelter" data-price="100">
+                        <h4>🔥 Smelter</h4>
+                        <p>Smelts 3 ores into bars</p>
+                        <p class="price">$100</p>
+                    </div>
+                    <div class="shop-item" data-type="converter" data-price="200" data-research="converter" style="display:none;">
+                        <h4>⚙️ Converter</h4>
+                        <p>Converts items to products</p>
+                        <p class="price">$200</p>
+                    </div>
+                    <div class="shop-item" data-type="seller" data-price="50">
+                        <h4>💵 Seller</h4>
+                        <p>Sells items (holds 5)</p>
+                        <p class="price">$50</p>
+                    </div>
+                </div>
+
+                <div class="shop-category">
+                    <h3>Research & Power</h3>
+                    <div class="shop-item" data-type="research-center" data-price="300">
+                        <h4>🔬 Research Center</h4>
+                        <p>Consumes items for RP</p>
+                        <p class="price">$300</p>
+                    </div>
+                    <div class="shop-item" data-type="battery" data-price="150">
+                        <h4>🔋 Battery</h4>
+                        <p>Stores 100 energy units</p>
+                        <p class="price">$150</p>
+                    </div>
+                    <div class="shop-item" data-type="wire" data-price="5">
+                        <h4>⚡ Wire</h4>
+                        <p>Transmits power</p>
+                        <p class="price">$5</p>
+                    </div>
+                </div>
+
+                <div class="shop-category">
+                    <h3>Tools</h3>
+                    <div class="shop-item" data-type="delete" data-price="0">
+                        <h4>🗑️ Delete</h4>
+                        <p class="price">Free</p>
+                    </div>
+                </div>
+
+                <div id="building-info">
+                    <h3 id="building-name">Building Info</h3>
+                    <div class="building-stat">
+                        <strong>Level:</strong> <span id="building-level">1</span>
+                    </div>
+                    <div class="building-stat" id="building-speed-stat" style="display:none;">
+                        <strong>Speed:</strong> <span id="building-speed">1x</span>
+                    </div>
+                    <div class="building-stat" id="building-capacity-stat" style="display:none;">
+                        <strong>Capacity:</strong> <span id="building-capacity">5</span>
+                    </div>
+                    <button class="upgrade-building-btn" onclick="upgradeSingleBuilding()">
+                        Upgrade - $<span id="building-upgrade-cost">50</span>
+                    </button>
+                </div>
+
+                <div id="converter-config">
+                    <h4>Select Recipe</h4>
+                    <div class="converter-recipe" data-recipe="steel">
+                        <h5>⚙️ Steel Gear</h5>
+                        <p>Input: 2 Iron + 1 Copper → Value: 10x</p>
+                    </div>
+                    <div class="converter-recipe" data-recipe="circuit">
+                        <h5>💡 Circuit Board</h5>
+                        <p>Input: 1 Copper + 1 Silver → Value: 15x</p>
+                    </div>
+                    <div class="converter-recipe" data-recipe="processor">
+                        <h5>🖥️ Processor</h5>
+                        <p>Input: 1 Gold + 1 Silver → Value: 25x</p>
+                    </div>
+                    <div class="converter-recipe" data-recipe="quantum">
+                        <h5>💎 Quantum Chip</h5>
+                        <p>Input: 2 Diamond + 1 Gold → Value: 60x</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="message"></div>
+
+    <div id="tax-notification" class="tax-notification">
+        <strong>💸 Tax Collected!</strong><br>
+        Government took $<span id="tax-amount">0</span>
+    </div>
+
+    <div id="research-panel">
+        <div class="research-header">
+            <h2>🔬 Research Lab</h2>
+            <button class="close-btn" onclick="toggleResearch()">Close</button>
+        </div>
+        
+        <div class="research-item" data-research="pollution-filter">
+            <h3>🌿 Pollution Filter</h3>
+            <p>Reduce pollution generation by 50%</p>
+            <div class="research-info">
+                <span class="research-cost">Cost: 50 RP</span>
+                <button class="research-btn" onclick="unlockResearch('pollution-filter')">Research</button>
+            </div>
+        </div>
+
+        <div class="research-item" data-research="tax-reduction">
+            <h3>💼 Tax Optimization</h3>
+            <p>Reduce tax rate from 10% to 5%</p>
+            <div class="research-info">
+                <span class="research-cost">Cost: 100 RP</span>
+                <button class="research-btn" onclick="unlockResearch('tax-reduction')">Research</button>
+            </div>
+        </div>
+
+        <div class="research-item" data-research="converter">
+            <h3>⚙️ Product Converter</h3>
+            <p>Unlock the ability to convert ores into high-value products</p>
+            <div class="research-info">
+                <span class="research-cost">Cost: 75 RP</span>
+                <button class="research-btn" onclick="unlockResearch('converter')">Research</button>
+            </div>
+        </div>
+
+        <div class="research-item" data-research="fast-production">
+            <h3>⚡ Fast Production</h3>
+            <p>Converters and Smelters work 2x faster</p>
+            <div class="research-info">
+                <span class="research-cost">Cost: 150 RP</span>
+                <button class="research-btn" onclick="unlockResearch('fast-production')">Research</button>
+            </div>
+        </div>
+
+        <div class="research-item" data-research="mega-capacity">
+            <h3>📦 Mega Capacity</h3>
+            <p>Double the capacity of all Sellers and Smelters</p>
+            <div class="research-info">
+                <span class="research-cost">Cost: 200 RP</span>
+                <button class="research-btn" onclick="unlockResearch('mega-capacity')">Research</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Ore rarity system
+        const ORE_RARITIES = {
+            common: { name: 'Iron', chance: 0.50, value: 1, color: '#a8a8a8' },
+            uncommon: { name: 'Copper', chance: 0.30, value: 2, color: '#4ade80' },
+            rare: { name: 'Silver', chance: 0.12, value: 4, color: '#60a5fa' },
+            epic: { name: 'Gold', chance: 0.06, value: 8, color: '#a78bfa' },
+            legendary: { name: 'Diamond', chance: 0.02, value: 20, color: '#fbbf24' }
+        };
+
+        // Converter recipes
+        const CONVERTER_RECIPES = {
+            steel: {
+                name: 'Steel Gear',
+                inputs: { common: 2, uncommon: 1 },
+                value: 10,
+                icon: '⚙️',
+                productionTime: 3
+            },
+            circuit: {
+                name: 'Circuit Board',
+                inputs: { uncommon: 1, rare: 1 },
+                value: 15,
+                icon: '💡',
+                productionTime: 4
+            },
+            processor: {
+                name: 'Processor',
+                inputs: { epic: 1, rare: 1 },
+                value: 25,
+                icon: '🖥️',
+                productionTime: 5
+            },
+            quantum: {
+                name: 'Quantum Chip',
+                inputs: { legendary: 2, epic: 1 },
+                value: 60,
+                icon: '💎',
+                productionTime: 6
+            }
+        };
+
+        // Research tree
+        const RESEARCH_TREE = {
+            'pollution-filter': { cost: 50, unlocked: false },
+            'tax-reduction': { cost: 100, unlocked: false },
+            'converter': { cost: 75, unlocked: false },
+            'fast-production': { cost: 150, unlocked: false },
+            'mega-capacity': { cost: 200, unlocked: false }
+        };
+
+        let GRID_SIZE = 30;
+        const CELL_SIZE = 50;
+        let ORE_SPAWN_RATE = 0.05;
+        const BASE_ITEM_VALUE = 25;
+        const SELLER_CAPACITY = 5;
+        const SMELTER_CAPACITY = 3;
+        const BASE_TICK_RATE = 500;
+        let STARTING_MONEY = 100;
+        let RARE_CHANCE_MULTIPLIER = 1;
+
+        let gameState = {
+            money: STARTING_MONEY,
+            itemsSold: 0,
+            grid: [],
+            items: [],
+            selectedTool: null,
+            toolPrice: 0,
+            selectedBuilding: null,
+            researchPoints: 0,
+            pollution: 0,
+            lastTaxTime: Date.now(),
+            research: {
+                'pollution-filter': false,
+                'tax-reduction': false,
+                'converter': false,
+                'fast-production': false,
+                'mega-capacity': false
+            },
+            worldSettings: {
+                oreRate: 0.05,
+                startingMoney: 100,
+                gridSize: 30,
+                rareChance: 1
+            },
+            saveVersion: 3
+        };
+
+        let gameLoopInterval = null;
+        const TAX_INTERVAL = 60000; // Tax every 60 seconds
+        const TAX_RATE_HIGH = 0.10; // 10% tax
+        const TAX_RATE_LOW = 0.05; // 5% tax with research
+
+        function showWorldGen() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('world-gen-menu').style.display = 'flex';
+        }
+
+        function backToMenu() {
+            document.getElementById('world-gen-menu').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
+        }
+
+        function updateSettingDisplay() {
+            const oreRate = document.getElementById('ore-rate').value;
+            const money = document.getElementById('starting-money').value;
+            const gridSize = document.getElementById('grid-size').value;
+            const rareChance = document.getElementById('rare-chance').value;
+
+            document.getElementById('ore-rate-display').textContent = oreRate + '%';
+            document.getElementById('money-display').textContent = '$' + money;
+            document.getElementById('grid-size-display').textContent = gridSize + 'x' + gridSize;
+            
+            const rareNames = ['Low', 'Medium', 'High'];
+            document.getElementById('rare-chance-display').textContent = rareNames[rareChance - 1];
+        }
+
+        function startNewGame() {
+            ORE_SPAWN_RATE = parseFloat(document.getElementById('ore-rate').value) / 100;
+            STARTING_MONEY = parseInt(document.getElementById('starting-money').value);
+            GRID_SIZE = parseInt(document.getElementById('grid-size').value);
+            RARE_CHANCE_MULTIPLIER = parseFloat(document.getElementById('rare-chance').value);
+
+            gameState = {
+                money: STARTING_MONEY,
+                itemsSold: 0,
+                grid: [],
+                items: [],
+                selectedTool: null,
+                toolPrice: 0,
+                selectedBuilding: null,
+                researchPoints: 0,
+                pollution: 0,
+                lastTaxTime: Date.now(),
+                research: {
+                    'pollution-filter': false,
+                    'tax-reduction': false,
+                    'converter': false,
+                    'fast-production': false,
+                    'mega-capacity': false
+                },
+                worldSettings: {
+                    oreRate: ORE_SPAWN_RATE,
+                    startingMoney: STARTING_MONEY,
+                    gridSize: GRID_SIZE,
+                    rareChance: RARE_CHANCE_MULTIPLIER
+                },
+                saveVersion: 3
+            };
+            
+            startGame();
+        }
+
+        function getOreRarity() {
+            const rand = Math.random();
+            let cumulative = 0;
+            
+            const rarityOrder = ['legendary', 'epic', 'rare', 'uncommon', 'common'];
+            for (let rarity of rarityOrder) {
+                const adjustedChance = ORE_RARITIES[rarity].chance * (rarity === 'common' ? 1 : RARE_CHANCE_MULTIPLIER);
+                cumulative += adjustedChance;
+                if (rand < cumulative) {
+                    return rarity;
+                }
+            }
+            return 'common';
+        }
+
+        function initGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            gridElement.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 50px)`;
+            gridElement.style.gridTemplateRows = `repeat(${GRID_SIZE}, 50px)`;
+            gameState.grid = [];
+
+            for (let y = 0; y < GRID_SIZE; y++) {
+                gameState.grid[y] = [];
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    
+                    const isOre = Math.random() < ORE_SPAWN_RATE;
+                    if (isOre) {
+                        const rarity = getOreRarity();
+                        gameState.grid[y][x] = {
+                            type: 'ore',
+                            rarity: rarity,
+                            direction: null,
+                            items: [],
+                            level: 1
+                        };
+                        cell.classList.add('ore');
+                        
+                        const oreDeposit = document.createElement('div');
+                        oreDeposit.className = `ore-deposit ${rarity}`;
+                        cell.appendChild(oreDeposit);
+
+                        const oreLabel = document.createElement('div');
+                        oreLabel.className = `ore-label ${rarity}`;
+                        oreLabel.textContent = ORE_RARITIES[rarity].name[0];
+                        cell.appendChild(oreLabel);
+                    } else {
+                        gameState.grid[y][x] = {
+                            type: 'empty',
+                            direction: null,
+                            items: [],
+                            rarity: null,
+                            level: 1
+                        };
+                    }
+
+                    cell.addEventListener('click', (e) => handleCellClick(x, y, e));
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(x, y, event) {
+            const cellData = gameState.grid[y][x];
+            
+            // Right-click or shift-click to select building for upgrade
+            if (event.shiftKey || event.button === 2) {
+                event.preventDefault();
+                if (cellData.type !== 'empty' && cellData.type !== 'ore') {
+                    selectBuilding(x, y);
+                }
+                return;
+            }
+            
+            if (!gameState.selectedTool) {
+                showMessage('Select a tool from shop or Shift+Click a building to upgrade!');
+                return;
+            }
+
+            if (gameState.selectedTool === 'delete') {
+                if (cellData.type !== 'empty' && cellData.type !== 'ore') {
+                    cellData.type = 'empty';
+                    cellData.direction = null;
+                    cellData.items = [];
+                    cellData.level = 1;
+                    updateCellDisplay(x, y);
+                    showMessage('Building removed!');
+                }
+                return;
+            }
+
+            if (cellData.type !== 'empty') {
+                showMessage('This cell is already occupied!');
+                return;
+            }
+
+            if (gameState.money < gameState.toolPrice) {
+                showMessage('Not enough money!');
+                return;
+            }
+
+            gameState.money -= gameState.toolPrice;
+            
+            if (gameState.selectedTool.startsWith('conveyor')) {
+                const direction = gameState.selectedTool.split('-')[1];
+                cellData.type = 'conveyor';
+                cellData.direction = direction;
+                cellData.level = 1;
+                cellData.speed = 1;
+            } else if (gameState.selectedTool === 'seller') {
+                cellData.type = 'seller';
+                cellData.items = [];
+                cellData.level = 1;
+                cellData.capacity = SELLER_CAPACITY;
+            } else if (gameState.selectedTool === 'smelter') {
+                cellData.type = 'smelter';
+                cellData.items = [];
+                cellData.level = 1;
+                cellData.capacity = SMELTER_CAPACITY;
+            } else if (gameState.selectedTool === 'converter') {
+                cellData.type = 'converter';
+                cellData.items = [];
+                cellData.level = 1;
+                cellData.recipe = 'steel';
+                cellData.progress = 0;
+                cellData.producing = false;
+            } else if (gameState.selectedTool === 'research-center') {
+                cellData.type = 'research-center';
+                cellData.items = [];
+                cellData.level = 1;
+                cellData.energy = 0;
+                cellData.powered = false;
+            } else if (gameState.selectedTool === 'battery') {
+                cellData.type = 'battery';
+                cellData.level = 1;
+                cellData.energy = 0;
+                cellData.maxEnergy = 100;
+            } else if (gameState.selectedTool === 'wire') {
+                cellData.type = 'wire';
+                cellData.level = 1;
+                cellData.powered = false;
+            }
+
+            updateCellDisplay(x, y);
+            updateUI();
+            showMessage(`Placed ${gameState.selectedTool}! -$${gameState.toolPrice}`);
+        }
+
+        function selectBuilding(x, y) {
+            // Deselect previous building
+            if (gameState.selectedBuilding) {
+                const prevCell = document.querySelector(`[data-x="${gameState.selectedBuilding.x}"][data-y="${gameState.selectedBuilding.y}"]`);
+                if (prevCell) prevCell.classList.remove('selected-building');
+            }
+
+            gameState.selectedBuilding = { x, y };
+            const cell = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+            cell.classList.add('selected-building');
+
+            const cellData = gameState.grid[y][x];
+            showBuildingInfo(cellData);
+
+            // Show converter config if it's a converter
+            if (cellData.type === 'converter') {
+                document.getElementById('converter-config').style.display = 'block';
+                // Highlight current recipe
+                document.querySelectorAll('.converter-recipe').forEach(r => r.classList.remove('selected'));
+                const currentRecipe = document.querySelector(`[data-recipe="${cellData.recipe}"]`);
+                if (currentRecipe) currentRecipe.classList.add('selected');
+            } else {
+                document.getElementById('converter-config').style.display = 'none';
+            }
+        }
+
+        function showBuildingInfo(cellData) {
+            const infoPanel = document.getElementById('building-info');
+            infoPanel.style.display = 'block';
+
+            const typeNames = {
+                'conveyor': 'Conveyor',
+                'seller': 'Seller',
+                'smelter': 'Smelter',
+                'converter': 'Converter',
+                'research-center': 'Research Center',
+                'battery': 'Battery',
+                'wire': 'Wire'
+            };
+
+            document.getElementById('building-name').textContent = typeNames[cellData.type] || 'Building';
+            document.getElementById('building-level').textContent = cellData.level || 1;
+
+            const speedStat = document.getElementById('building-speed-stat');
+            const capacityStat = document.getElementById('building-capacity-stat');
+
+            if (cellData.type === 'conveyor') {
+                speedStat.style.display = 'block';
+                capacityStat.style.display = 'none';
+                document.getElementById('building-speed').textContent = (cellData.speed || 1) + 'x';
+            } else if (cellData.type === 'seller' || cellData.type === 'smelter') {
+                speedStat.style.display = 'none';
+                capacityStat.style.display = 'block';
+                document.getElementById('building-capacity').textContent = cellData.capacity || 5;
+            } else if (cellData.type === 'converter' || cellData.type === 'research-center') {
+                speedStat.style.display = 'block';
+                capacityStat.style.display = 'none';
+                const productionSpeed = 1 + (cellData.level - 1) * 0.3;
+                document.getElementById('building-speed').textContent = productionSpeed.toFixed(1) + 'x';
+            } else if (cellData.type === 'battery') {
+                speedStat.style.display = 'none';
+                capacityStat.style.display = 'block';
+                const maxEnergy = (cellData.maxEnergy || 100) + ((cellData.level - 1) * 50);
+                document.getElementById('building-capacity').textContent = Math.round(cellData.energy || 0) + '/' + maxEnergy + ' ⚡';
+            } else if (cellData.type === 'wire') {
+                speedStat.style.display = 'none';
+                capacityStat.style.display = 'none';
+            }
+
+            const baseCost = cellData.type === 'conveyor' ? 30 : 
+                            (cellData.type === 'seller' ? 75 : 
+                            (cellData.type === 'converter' ? 150 :
+                            (cellData.type === 'research-center' ? 200 :
+                            (cellData.type === 'battery' ? 100 :
+                            (cellData.type === 'wire' ? 10 : 150)))));
+            const upgradeCost = Math.floor(baseCost * Math.pow(1.5, cellData.level));
+            document.getElementById('building-upgrade-cost').textContent = upgradeCost;
+
+            const upgradeBtn = document.querySelector('.upgrade-building-btn');
+            if (upgradeBtn) {
+                upgradeBtn.disabled = gameState.money < upgradeCost;
+            }
+        }
+
+        function upgradeSingleBuilding() {
+            if (!gameState.selectedBuilding) return;
+
+            const { x, y } = gameState.selectedBuilding;
+            const cellData = gameState.grid[y][x];
+
+            const baseCost = cellData.type === 'conveyor' ? 30 : 
+                            (cellData.type === 'seller' ? 75 : 
+                            (cellData.type === 'converter' ? 150 :
+                            (cellData.type === 'research-center' ? 200 :
+                            (cellData.type === 'battery' ? 100 :
+                            (cellData.type === 'wire' ? 10 : 150)))));
+            const upgradeCost = Math.floor(baseCost * Math.pow(1.5, cellData.level));
+
+            if (gameState.money < upgradeCost) {
+                showMessage('Not enough money!');
+                return;
+            }
+
+            gameState.money -= upgradeCost;
+            cellData.level++;
+
+            if (cellData.type === 'conveyor') {
+                cellData.speed = 1 + (cellData.level - 1) * 0.5;
+                showMessage(`Conveyor upgraded to level ${cellData.level}! Speed: ${cellData.speed}x`);
+            } else if (cellData.type === 'seller') {
+                cellData.capacity = SELLER_CAPACITY + (cellData.level - 1) * 2;
+                showMessage(`Seller upgraded to level ${cellData.level}! Capacity: ${cellData.capacity}`);
+            } else if (cellData.type === 'smelter') {
+                cellData.capacity = Math.max(2, SMELTER_CAPACITY - Math.floor((cellData.level - 1) / 2));
+                showMessage(`Smelter upgraded to level ${cellData.level}! Needs: ${cellData.capacity} ores`);
+            } else if (cellData.type === 'converter' || cellData.type === 'research-center') {
+                showMessage(`${cellData.type === 'converter' ? 'Converter' : 'Research Center'} upgraded to level ${cellData.level}! Faster production!`);
+            } else if (cellData.type === 'battery') {
+                cellData.maxEnergy = 100 + ((cellData.level - 1) * 50);
+                showMessage(`Battery upgraded to level ${cellData.level}! Capacity: ${cellData.maxEnergy} ⚡`);
+            } else if (cellData.type === 'wire') {
+                showMessage(`Wire upgraded to level ${cellData.level}! Better conductivity!`);
+            }
+
+            updateCellDisplay(x, y);
+            showBuildingInfo(cellData);
+            updateUI();
+        }
+
+        function updatePowerNetwork() {
+            // Reset all powered states
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const cell = gameState.grid[y][x];
+                    if (cell.type === 'wire' || cell.type === 'research-center') {
+                        cell.powered = false;
+                    }
+                }
+            }
+
+            // Find all batteries and spread power through wires
+            const powerSources = [];
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const cell = gameState.grid[y][x];
+                    if (cell.type === 'battery' && (cell.energy || 0) > 0) {
+                        powerSources.push({ x, y });
+                    }
+                }
+            }
+
+            // BFS to spread power through wire network
+            for (let source of powerSources) {
+                const visited = new Set();
+                const queue = [source];
+                visited.add(`${source.x},${source.y}`);
+
+                while (queue.length > 0) {
+                    const current = queue.shift();
+                    const neighbors = getNeighbors(current.x, current.y);
+
+                    for (let neighbor of neighbors) {
+                        const key = `${neighbor.x},${neighbor.y}`;
+                        if (visited.has(key)) continue;
+
+                        const neighborCell = gameState.grid[neighbor.y][neighbor.x];
+                        
+                        if (neighborCell.type === 'wire') {
+                            neighborCell.powered = true;
+                            visited.add(key);
+                            queue.push(neighbor);
+                        } else if (neighborCell.type === 'research-center') {
+                            neighborCell.powered = true;
+                            neighborCell.energy = (neighborCell.energy || 0) + 0.5;
+                            visited.add(key);
+                        }
+                    }
+                }
+
+                // Slowly drain battery
+                const battery = gameState.grid[source.y][source.x];
+                battery.energy = Math.max(0, (battery.energy || 0) - 0.1);
+            }
+
+            // Batteries slowly charge from adjacent sellers
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const cell = gameState.grid[y][x];
+                    if (cell.type === 'battery') {
+                        const neighbors = getNeighbors(x, y);
+                        for (let neighbor of neighbors) {
+                            const neighborCell = gameState.grid[neighbor.y][neighbor.x];
+                            if (neighborCell.type === 'seller' && neighborCell.items && neighborCell.items.length > 0) {
+                                // Charge battery from nearby sellers with items
+                                const maxEnergy = (cell.maxEnergy || 100) + ((cell.level - 1) * 50);
+                                cell.energy = Math.min(maxEnergy, (cell.energy || 0) + 0.3);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function updateCellDisplay(x, y) {
+            const cellData = gameState.grid[y][x];
+            const cellElement = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+            
+            cellElement.className = 'cell';
+            if (gameState.selectedBuilding && gameState.selectedBuilding.x === x && gameState.selectedBuilding.y === y) {
+                cellElement.classList.add('selected-building');
+            }
+            cellElement.innerHTML = '';
+
+            if (cellData.type === 'ore') {
+                cellElement.classList.add('ore');
+                const oreDeposit = document.createElement('div');
+                oreDeposit.className = `ore-deposit ${cellData.rarity}`;
+                cellElement.appendChild(oreDeposit);
+
+                const oreLabel = document.createElement('div');
+                oreLabel.className = `ore-label ${cellData.rarity}`;
+                oreLabel.textContent = ORE_RARITIES[cellData.rarity].name[0];
+                cellElement.appendChild(oreLabel);
+            } else if (cellData.type === 'conveyor') {
+                cellElement.classList.add('conveyor');
+                const arrow = document.createElement('div');
+                arrow.className = 'arrow';
+                arrow.textContent = getArrowSymbol(cellData.direction);
+                cellElement.appendChild(arrow);
+
+                if (cellData.level > 1) {
+                    const badge = document.createElement('div');
+                    badge.className = 'level-badge';
+                    badge.textContent = 'L' + cellData.level;
+                    cellElement.appendChild(badge);
+                }
+            } else if (cellData.type === 'seller') {
+                cellElement.classList.add('seller');
+                cellElement.textContent = '💵';
+                const count = document.createElement('div');
+                count.className = 'seller-count';
+                count.textContent = `${cellData.items.length}/${cellData.capacity || SELLER_CAPACITY}`;
+                cellElement.appendChild(count);
+
+                if (cellData.level > 1) {
+                    const badge = document.createElement('div');
+                    badge.className = 'level-badge';
+                    badge.textContent = 'L' + cellData.level;
+                    cellElement.appendChild(badge);
+                }
+            } else if (cellData.type === 'smelter') {
+                cellElement.classList.add('smelter');
+                if (cellData.items.length > 0) {
+                    cellElement.classList.add('smelter-active');
+                }
+                cellElement.textContent = '🔥';
+                const count = document.createElement('div');
+                count.className = 'smelter-count';
+                const needed = cellData.capacity || SMELTER_CAPACITY;
+                count.textContent = `${cellData.items.length}/${needed}`;
+                cellElement.appendChild(count);
+
+                if (cellData.level > 1) {
+                    const badge = document.createElement('div');
+                    badge.className = 'level-badge';
+                    badge.textContent = 'L' + cellData.level;
+                    cellElement.appendChild(badge);
+                }
+            } else if (cellData.type === 'converter') {
+                cellElement.classList.add('converter');
+                const recipe = CONVERTER_RECIPES[cellData.recipe];
+                cellElement.textContent = recipe ? recipe.icon : '⚙️';
+
+                if (cellData.producing && cellData.progress > 0) {
+                    const progressBar = document.createElement('div');
+                    progressBar.className = 'progress-bar';
+                    progressBar.style.width = (cellData.progress * 100) + '%';
+                    cellElement.appendChild(progressBar);
+                }
+
+                if (cellData.level > 1) {
+                    const badge = document.createElement('div');
+                    badge.className = 'level-badge';
+                    badge.textContent = 'L' + cellData.level;
+                    cellElement.appendChild(badge);
+                }
+            }
+
+            // Add pollution overlay to polluting buildings
+            if ((cellData.type === 'smelter' || cellData.type === 'converter') && !gameState.research['pollution-filter']) {
+                const pollutionOverlay = document.createElement('div');
+                pollutionOverlay.className = 'pollution-overlay';
+                cellElement.appendChild(pollutionOverlay);
+                if (cellData.items && cellData.items.length > 0) {
+                    cellElement.classList.add('polluted');
+                }
+            }
+
+            // Research Center
+            if (cellData.type === 'research-center') {
+                cellElement.classList.add('research-center');
+                if (cellData.powered) {
+                    cellElement.classList.add('research-center-active');
+                }
+                cellElement.textContent = '🔬';
+
+                if (cellData.level > 1) {
+                    const badge = document.createElement('div');
+                    badge.className = 'level-badge';
+                    badge.textContent = 'L' + cellData.level;
+                    cellElement.appendChild(badge);
+                }
+
+                const count = document.createElement('div');
+                count.className = 'seller-count';
+                count.textContent = `${cellData.items ? cellData.items.length : 0}`;
+                cellElement.appendChild(count);
+            }
+
+            // Battery
+            if (cellData.type === 'battery') {
+                cellElement.classList.add('battery');
+                cellElement.textContent = '🔋';
+
+                const maxEnergy = (cellData.maxEnergy || 100) + ((cellData.level - 1) * 50);
+                const energyPercent = ((cellData.energy || 0) / maxEnergy) * 100;
+
+                const batteryLevel = document.createElement('div');
+                batteryLevel.className = 'battery-level';
+                batteryLevel.style.height = energyPercent + '%';
+                cellElement.appendChild(batteryLevel);
+
+                if (cellData.level > 1) {
+                    const badge = document.createElement('div');
+                    badge.className = 'level-badge';
+                    badge.textContent = 'L' + cellData.level;
+                    cellElement.appendChild(badge);
+                }
+            }
+
+            // Wire
+            if (cellData.type === 'wire') {
+                cellElement.classList.add('wire');
+                if (cellData.powered) {
+                    cellElement.classList.add('wire-powered');
+                }
+
+                // Draw wire lines (always show both for flexibility)
+                const horizontalLine = document.createElement('div');
+                horizontalLine.className = 'wire-line horizontal';
+                cellElement.appendChild(horizontalLine);
+
+                const verticalLine = document.createElement('div');
+                verticalLine.className = 'wire-line vertical';
+                cellElement.appendChild(verticalLine);
+            }
+        }
+
+        function gameLoop() {
+            const spawnChance = 0.25;
+            
+            // Check for taxes
+            const currentTime = Date.now();
+            if (currentTime - gameState.lastTaxTime >= TAX_INTERVAL) {
+                const taxRate = gameState.research['tax-reduction'] ? TAX_RATE_LOW : TAX_RATE_HIGH;
+                const taxAmount = Math.floor(gameState.money * taxRate);
+                if (taxAmount > 0) {
+                    gameState.money -= taxAmount;
+                    showTaxNotification(taxAmount);
+                }
+                gameState.lastTaxTime = currentTime;
+            }
+
+            // Update pollution
+            let totalPollution = 0;
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const cell = gameState.grid[y][x];
+                    if ((cell.type === 'smelter' || cell.type === 'converter') && cell.items && cell.items.length > 0) {
+                        totalPollution += gameState.research['pollution-filter'] ? 0.1 : 0.2;
+                    }
+                }
+            }
+            gameState.pollution = Math.max(0, Math.min(100, gameState.pollution + totalPollution - 0.3));
+
+            // Power network calculation
+            updatePowerNetwork();
+
+            // Process research centers
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const cell = gameState.grid[y][x];
+                    if (cell.type === 'research-center' && cell.powered && cell.items && cell.items.length > 0) {
+                        // Consume items for research points
+                        const productionSpeed = gameState.research['fast-production'] ? 2 : 1;
+                        const levelMultiplier = 1 + (cell.level - 1) * 0.3;
+                        
+                        if (Math.random() < 0.2 * productionSpeed * levelMultiplier) {
+                            const item = cell.items.shift();
+                            if (item) {
+                                let rpGain = 1;
+                                if (item.converted) {
+                                    rpGain = item.value;
+                                } else if (item.smelted) {
+                                    rpGain = item.value;
+                                } else {
+                                    rpGain = ORE_RARITIES[item.rarity].value;
+                                }
+                                gameState.researchPoints += rpGain;
+                                cell.energy = Math.max(0, (cell.energy || 0) - 5); // Consume energy
+                            }
+                            updateCellDisplay(x, y);
+                        }
+                    }
+                }
+            }
+            
+            // Spawn items on ore deposits
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const cell = gameState.grid[y][x];
+                    if (cell.type === 'ore') {
+                        const neighbors = getNeighbors(x, y);
+                        for (let neighbor of neighbors) {
+                            const neighborCell = gameState.grid[neighbor.y][neighbor.x];
+                            if (neighborCell.type === 'conveyor') {
+                                const hasItem = gameState.items.some(item => 
+                                    item.x === neighbor.x && item.y === neighbor.y
+                                );
+                                if (!hasItem && Math.random() < spawnChance) {
+                                    gameState.items.push({
+                                        x: neighbor.x,
+                                        y: neighbor.y,
+                                        id: Date.now() + Math.random(),
+                                        rarity: cell.rarity,
+                                        smelted: false,
+                                        converted: false,
+                                        progress: 0
+                                    });
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Process converters
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    const cell = gameState.grid[y][x];
+                    if (cell.type === 'converter' && cell.items && cell.items.length > 0) {
+                        const recipe = CONVERTER_RECIPES[cell.recipe];
+                        if (!recipe) continue;
+
+                        // Check if we have the required inputs
+                        const inputCounts = {};
+                        for (let item of cell.items) {
+                            if (!item.smelted && !item.converted) {
+                                inputCounts[item.rarity] = (inputCounts[item.rarity] || 0) + 1;
+                            }
+                        }
+
+                        let canProduce = true;
+                        for (let [rarity, count] of Object.entries(recipe.inputs)) {
+                            if ((inputCounts[rarity] || 0) < count) {
+                                canProduce = false;
+                                break;
+                            }
+                        }
+
+                        if (canProduce && !cell.producing) {
+                            cell.producing = true;
+                            cell.progress = 0;
+                        }
+
+                        if (cell.producing) {
+                            const productionSpeed = gameState.research['fast-production'] ? 2 : 1;
+                            const levelMultiplier = 1 + (cell.level - 1) * 0.3;
+                            cell.progress += (0.1 * productionSpeed * levelMultiplier);
+
+                            if (cell.progress >= 1) {
+                                // Remove inputs
+                                for (let [rarity, count] of Object.entries(recipe.inputs)) {
+                                    let removed = 0;
+                                    cell.items = cell.items.filter(item => {
+                                        if (!item.smelted && !item.converted && item.rarity === rarity && removed < count) {
+                                            removed++;
+                                            return false;
+                                        }
+                                        return true;
+                                    });
+                                }
+
+                                // Output product to adjacent conveyor
+                                const converterNeighbors = getNeighbors(x, y);
+                                for (let n of converterNeighbors) {
+                                    const nCell = gameState.grid[n.y][n.x];
+                                    if (nCell.type === 'conveyor') {
+                                        const hasItem = gameState.items.some(i => i.x === n.x && i.y === n.y);
+                                        if (!hasItem) {
+                                            gameState.items.push({
+                                                x: n.x,
+                                                y: n.y,
+                                                id: Date.now() + Math.random(),
+                                                rarity: cell.recipe,
+                                                value: recipe.value,
+                                                converted: true,
+                                                productName: recipe.name,
+                                                progress: 0
+                                            });
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                cell.producing = false;
+                                cell.progress = 0;
+                            }
+                        }
+                        updateCellDisplay(x, y);
+                    }
+                }
+            }
+
+            // Move items
+            const newItems = [];
+            for (let item of gameState.items) {
+                const cell = gameState.grid[item.y][item.x];
+                
+                if (cell.type === 'conveyor') {
+                    const speed = cell.speed || 1;
+                    item.progress = (item.progress || 0) + speed;
+
+                    if (item.progress >= 1) {
+                        item.progress = 0;
+                        const nextPos = getNextPosition(item.x, item.y, cell.direction);
+                        if (nextPos) {
+                            const nextCell = gameState.grid[nextPos.y][nextPos.x];
+                            
+                            if (nextCell.type === 'converter') {
+                                // Only accept raw ores, not converted products
+                                if (!item.smelted && !item.converted) {
+                                    nextCell.items = nextCell.items || [];
+                                    nextCell.items.push(item);
+                                } else {
+                                    newItems.push(item);
+                                }
+                            } else if (nextCell.type === 'research-center') {
+                                // Accept any item type
+                                nextCell.items = nextCell.items || [];
+                                nextCell.items.push(item);
+                                updateCellDisplay(nextPos.x, nextPos.y);
+                            } else if (nextCell.type === 'smelter') {
+                                const needed = nextCell.capacity || SMELTER_CAPACITY;
+                                
+                                // Only accept items if there's room and it's not converted product
+                                if (nextCell.items.length < needed && !item.converted) {
+                                    nextCell.items.push(item);
+                                    
+                                    if (nextCell.items.length >= needed) {
+                                        let totalValue = 0;
+                                        for (let ore of nextCell.items.slice(0, needed)) {
+                                            totalValue += ORE_RARITIES[ore.rarity].value;
+                                        }
+                                        
+                                        const smelterNeighbors = getNeighbors(nextPos.x, nextPos.y);
+                                        for (let n of smelterNeighbors) {
+                                            const nCell = gameState.grid[n.y][n.x];
+                                            if (nCell.type === 'conveyor') {
+                                                const hasItem = newItems.some(i => i.x === n.x && i.y === n.y);
+                                                if (!hasItem) {
+                                                    newItems.push({
+                                                        x: n.x,
+                                                        y: n.y,
+                                                        id: Date.now() + Math.random(),
+                                                        rarity: 'smelted',
+                                                        value: totalValue,
+                                                        smelted: true,
+                                                        progress: 0
+                                                    });
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        
+                                        nextCell.items = [];
+                                    }
+                                } else {
+                                    newItems.push(item);
+                                }
+                                updateCellDisplay(nextPos.x, nextPos.y);
+                            } else if (nextCell.type === 'seller') {
+                                nextCell.items.push(item);
+                                let baseCapacity = SELLER_CAPACITY;
+                                if (gameState.research['mega-capacity']) {
+                                    baseCapacity *= 2;
+                                }
+                                const capacity = nextCell.capacity || baseCapacity;
+                                
+                                if (nextCell.items.length >= capacity) {
+                                    let totalValue = 0;
+                                    for (let soldItem of nextCell.items) {
+                                        if (soldItem.converted) {
+                                            totalValue += soldItem.value * BASE_ITEM_VALUE * 3;
+                                        } else if (soldItem.smelted) {
+                                            totalValue += soldItem.value * BASE_ITEM_VALUE * 2;
+                                        } else {
+                                            totalValue += ORE_RARITIES[soldItem.rarity].value * BASE_ITEM_VALUE;
+                                        }
+                                    }
+                                    
+                                    gameState.money += totalValue;
+                                    gameState.itemsSold += nextCell.items.length;
+                                    gameState.researchPoints += Math.floor(nextCell.items.length / 2);
+                                    nextCell.items = [];
+                                    showMessage(`+$${totalValue} from seller! +${Math.floor(capacity / 2)} RP`);
+                                    updateCellDisplay(nextPos.x, nextPos.y);
+                                } else {
+                                    updateCellDisplay(nextPos.x, nextPos.y);
+                                }
+                            } else if (nextCell.type === 'conveyor') {
+                                const hasItem = newItems.some(i => i.x === nextPos.x && i.y === nextPos.y);
+                                if (!hasItem) {
+                                    item.x = nextPos.x;
+                                    item.y = nextPos.y;
+                                    newItems.push(item);
+                                } else {
+                                    newItems.push(item);
+                                }
+                            }
+                        } else {
+                            newItems.push(item);
+                        }
+                    } else {
+                        newItems.push(item);
+                    }
+                } else {
+                    newItems.push(item);
+                }
+            }
+            
+            gameState.items = newItems;
+            updateUI();
+            renderItems();
+        }
+
+        function renderItems() {
+            document.querySelectorAll('.item-on-conveyor').forEach(el => el.remove());
+            
+            for (let item of gameState.items) {
+                const cell = document.querySelector(`[data-x="${item.x}"][data-y="${item.y}"]`);
+                if (cell) {
+                    const cellData = gameState.grid[item.y][item.x];
+                    if (cellData.type === 'conveyor') {
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'item-on-conveyor';
+                        
+                        if (item.converted) {
+                            itemEl.classList.add('item-smelted');
+                            // Show product icon
+                            const recipe = CONVERTER_RECIPES[item.rarity];
+                            if (recipe) {
+                                itemEl.textContent = recipe.icon;
+                                itemEl.style.fontSize = '12px';
+                                itemEl.style.display = 'flex';
+                                itemEl.style.alignItems = 'center';
+                                itemEl.style.justifyContent = 'center';
+                            }
+                        } else if (item.smelted) {
+                            itemEl.classList.add('item-smelted');
+                        } else {
+                            itemEl.classList.add(`item-${item.rarity}`);
+                        }
+                        
+                        // Calculate position based on direction and progress
+                        const progress = item.progress || 0;
+                        const direction = cellData.direction;
+                        const basePos = 13;
+                        const maxOffset = 24;
+                        
+                        let left = basePos;
+                        let top = basePos;
+                        
+                        if (direction === 'right') {
+                            left = basePos + (progress * maxOffset);
+                        } else if (direction === 'left') {
+                            left = basePos + ((1 - progress) * maxOffset);
+                        } else if (direction === 'down') {
+                            top = basePos + (progress * maxOffset);
+                        } else if (direction === 'up') {
+                            top = basePos + ((1 - progress) * maxOffset);
+                        }
+                        
+                        itemEl.style.left = left + 'px';
+                        itemEl.style.top = top + 'px';
+                        cell.appendChild(itemEl);
+                    }
+                }
+            }
+        }
+
+        function saveGame() {
+            try {
+                const saveData = {
+                    ...gameState,
+                    gridSize: GRID_SIZE,
+                    oreSpawnRate: ORE_SPAWN_RATE,
+                    startingMoney: STARTING_MONEY,
+                    rareChanceMultiplier: RARE_CHANCE_MULTIPLIER
+                };
+                localStorage.setItem('factoryGameSave_v3', JSON.stringify(saveData));
+                showMessage('Game saved successfully!');
+            } catch (e) {
+                showMessage('Error saving game: ' + e.message);
+            }
+        }
+
+        function loadGame() {
+            try {
+                let saved = localStorage.getItem('factoryGameSave_v3');
+                
+                // Try v2 save if v3 doesn't exist
+                if (!saved) {
+                    saved = localStorage.getItem('factoryGameSave_v2');
+                }
+                
+                if (saved) {
+                    const saveData = JSON.parse(saved);
+                    
+                    // Backward compatibility for v2 saves
+                    if (!saveData.saveVersion || saveData.saveVersion < 3) {
+                        saveData.researchPoints = saveData.researchPoints || 0;
+                        saveData.pollution = saveData.pollution || 0;
+                        saveData.lastTaxTime = Date.now();
+                        saveData.research = saveData.research || {
+                            'pollution-filter': false,
+                            'tax-reduction': false,
+                            'converter': false,
+                            'fast-production': false,
+                            'mega-capacity': false
+                        };
+                        saveData.saveVersion = 3;
+                    }
+                    
+                    gameState = saveData;
+                    GRID_SIZE = saveData.gridSize || 30;
+                    ORE_SPAWN_RATE = saveData.oreSpawnRate || 0.05;
+                    STARTING_MONEY = saveData.startingMoney || 100;
+                    RARE_CHANCE_MULTIPLIER = saveData.rareChanceMultiplier || 1;
+                    
+                    startGame();
+                    showMessage('Game loaded successfully!');
+                } else {
+                    showMessage('No save file found!');
+                }
+            } catch (e) {
+                showMessage('Error loading game: ' + e.message);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('world-gen-menu').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+            
+            if (gameState.grid.length === 0) {
+                initGrid();
+            } else {
+                renderLoadedGrid();
+            }
+            
+            updateUI();
+            
+            if (gameLoopInterval) {
+                clearInterval(gameLoopInterval);
+            }
+            
+            gameLoopInterval = setInterval(gameLoop, BASE_TICK_RATE);
+        }
+
+        function renderLoadedGrid() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            gridElement.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 50px)`;
+            gridElement.style.gridTemplateRows = `repeat(${GRID_SIZE}, 50px)`;
+
+            for (let y = 0; y < GRID_SIZE; y++) {
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    // Ensure backward compatibility for cells without level
+                    if (!gameState.grid[y][x].level) {
+                        gameState.grid[y][x].level = 1;
+                    }
+                    if (gameState.grid[y][x].type === 'conveyor' && !gameState.grid[y][x].speed) {
+                        gameState.grid[y][x].speed = 1;
+                    }
+                    if (gameState.grid[y][x].type === 'seller' && !gameState.grid[y][x].capacity) {
+                        gameState.grid[y][x].capacity = SELLER_CAPACITY;
+                    }
+                    if (gameState.grid[y][x].type === 'smelter' && !gameState.grid[y][x].capacity) {
+                        gameState.grid[y][x].capacity = SMELTER_CAPACITY;
+                    }
+                    if (gameState.grid[y][x].type === 'converter') {
+                        if (!gameState.grid[y][x].recipe) gameState.grid[y][x].recipe = 'steel';
+                        if (gameState.grid[y][x].progress === undefined) gameState.grid[y][x].progress = 0;
+                        if (gameState.grid[y][x].producing === undefined) gameState.grid[y][x].producing = false;
+                        if (!gameState.grid[y][x].items) gameState.grid[y][x].items = [];
+                    }
+                    if (gameState.grid[y][x].type === 'research-center') {
+                        if (!gameState.grid[y][x].items) gameState.grid[y][x].items = [];
+                        if (gameState.grid[y][x].energy === undefined) gameState.grid[y][x].energy = 0;
+                        if (gameState.grid[y][x].powered === undefined) gameState.grid[y][x].powered = false;
+                    }
+                    if (gameState.grid[y][x].type === 'battery') {
+                        if (gameState.grid[y][x].energy === undefined) gameState.grid[y][x].energy = 0;
+                        if (!gameState.grid[y][x].maxEnergy) gameState.grid[y][x].maxEnergy = 100;
+                    }
+                    if (gameState.grid[y][x].type === 'wire') {
+                        if (gameState.grid[y][x].powered === undefined) gameState.grid[y][x].powered = false;
+                    }
+
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    cell.addEventListener('click', (e) => handleCellClick(x, y, e));
+                    cell.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        handleCellClick(x, y, e);
+                    });
+                    gridElement.appendChild(cell);
+                    updateCellDisplay(x, y);
+                }
+            }
+        }
+
+        function returnToMenu() {
+            if (confirm('Return to menu? (Don\'t forget to save!)')) {
+                if (gameLoopInterval) {
+                    clearInterval(gameLoopInterval);
+                }
+                location.reload();
+            }
+        }
+
+        function showMessage(text) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.style.display = 'block';
+            setTimeout(() => {
+                msg.style.display = 'none';
+            }, 2500);
+        }
+
+        function getArrowSymbol(direction) {
+            const arrows = {
+                'right': '→',
+                'left': '←',
+                'up': '↑',
+                'down': '↓'
+            };
+            return arrows[direction] || '';
+        }
+
+        function getNextPosition(x, y, direction) {
+            const moves = {
+                'right': { x: x + 1, y: y },
+                'left': { x: x - 1, y: y },
+                'up': { x: x, y: y - 1 },
+                'down': { x: x, y: y + 1 }
+            };
+            
+            const next = moves[direction];
+            if (next && next.x >= 0 && next.x < GRID_SIZE && next.y >= 0 && next.y < GRID_SIZE) {
+                return next;
+            }
+            return null;
+        }
+
+        function getNeighbors(x, y) {
+            const neighbors = [];
+            const directions = [
+                { x: x + 1, y: y },
+                { x: x - 1, y: y },
+                { x: x, y: y + 1 },
+                { x: x, y: y - 1 }
+            ];
+            
+            for (let dir of directions) {
+                if (dir.x >= 0 && dir.x < GRID_SIZE && dir.y >= 0 && dir.y < GRID_SIZE) {
+                    neighbors.push(dir);
+                }
+            }
+            return neighbors;
+        }
+
+        function toggleResearch() {
+            const panel = document.getElementById('research-panel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+            updateResearchUI();
+        }
+
+        function updateResearchUI() {
+            for (let [researchId, data] of Object.entries(RESEARCH_TREE)) {
+                const item = document.querySelector(`[data-research="${researchId}"]`);
+                if (item) {
+                    const btn = item.querySelector('.research-btn');
+                    const isUnlocked = gameState.research[researchId];
+                    
+                    if (isUnlocked) {
+                        item.classList.add('unlocked');
+                        item.classList.remove('locked');
+                        if (btn) {
+                            btn.textContent = 'Unlocked';
+                            btn.disabled = true;
+                        }
+                    } else {
+                        item.classList.remove('unlocked');
+                        item.classList.add('locked');
+                        if (btn) {
+                            btn.disabled = gameState.researchPoints < data.cost;
+                            btn.textContent = 'Research';
+                        }
+                    }
+                }
+            }
+        }
+
+        function unlockResearch(researchId) {
+            const data = RESEARCH_TREE[researchId];
+            if (!data || gameState.research[researchId]) return;
+
+            if (gameState.researchPoints < data.cost) {
+                showMessage('Not enough research points!');
+                return;
+            }
+
+            gameState.researchPoints -= data.cost;
+            gameState.research[researchId] = true;
+
+            // Unlock converter in shop
+            if (researchId === 'converter') {
+                const converterItem = document.querySelector('[data-type="converter"]');
+                if (converterItem) {
+                    converterItem.style.display = 'block';
+                }
+            }
+
+            showMessage(`Researched: ${researchId.replace(/-/g, ' ')}!`);
+            updateResearchUI();
+            updateUI();
+        }
+
+        function showTaxNotification(amount) {
+            const notification = document.getElementById('tax-notification');
+            document.getElementById('tax-amount').textContent = amount;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function updateUI() {
+            document.getElementById('money').textContent = gameState.money;
+            document.getElementById('items-sold').textContent = gameState.itemsSold;
+            document.getElementById('research-points').textContent = gameState.researchPoints;
+            
+            const pollutionElem = document.getElementById('pollution-level');
+            const pollutionPercent = Math.round(gameState.pollution);
+            pollutionElem.textContent = pollutionPercent + '%';
+            
+            if (pollutionPercent > 70) {
+                pollutionElem.className = 'pollution-indicator pollution-high';
+            } else if (pollutionPercent > 40) {
+                pollutionElem.className = 'pollution-indicator';
+            } else {
+                pollutionElem.className = 'pollution-indicator';
+                pollutionElem.style.color = '#4ade80';
+            }
+
+            if (gameState.selectedBuilding) {
+                const { x, y } = gameState.selectedBuilding;
+                const cellData = gameState.grid[y][x];
+                if (cellData && cellData.type !== 'empty' && cellData.type !== 'ore') {
+                    const baseCost = cellData.type === 'conveyor' ? 30 : 
+                                    (cellData.type === 'seller' ? 75 : 
+                                    (cellData.type === 'converter' ? 150 : 150));
+                    const upgradeCost = Math.floor(baseCost * Math.pow(1.5, cellData.level));
+                    const upgradeBtn = document.querySelector('.upgrade-building-btn');
+                    if (upgradeBtn) {
+                        upgradeBtn.disabled = gameState.money < upgradeCost;
+                    }
+                }
+            }
+        }
+
+        // Converter recipe selection
+        document.querySelectorAll('.converter-recipe').forEach(recipe => {
+            recipe.addEventListener('click', () => {
+                if (!gameState.selectedBuilding) return;
+                
+                const { x, y } = gameState.selectedBuilding;
+                const cellData = gameState.grid[y][x];
+                
+                if (cellData.type === 'converter') {
+                    cellData.recipe = recipe.dataset.recipe;
+                    cellData.items = [];
+                    cellData.producing = false;
+                    cellData.progress = 0;
+                    
+                    document.querySelectorAll('.converter-recipe').forEach(r => r.classList.remove('selected'));
+                    recipe.classList.add('selected');
+                    
+                    updateCellDisplay(x, y);
+                    showMessage(`Recipe changed to: ${CONVERTER_RECIPES[cellData.recipe].name}`);
+                }
+            });
+        });
+
+        // Shop item selection
+        document.querySelectorAll('.shop-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.shop-item').forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                gameState.selectedTool = item.dataset.type;
+                gameState.toolPrice = parseInt(item.dataset.price);
+                
+                // Deselect building when selecting a tool
+                if (gameState.selectedBuilding) {
+                    const prevCell = document.querySelector(`[data-x="${gameState.selectedBuilding.x}"][data-y="${gameState.selectedBuilding.y}"]`);
+                    if (prevCell) prevCell.classList.remove('selected-building');
+                    gameState.selectedBuilding = null;
+                    document.getElementById('building-info').style.display = 'none';
+                }
+            });
+        });
+
+        // Initialize settings display
+        updateSettingDisplay();
+
+        // Prevent context menu on grid
+        document.getElementById('grid-container').addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>

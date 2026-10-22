@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SITECHECK — Network Probe</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c0f;
+    --surface: #0f1318;
+    --border: #1e2530;
+    --accent: #00ff88;
+    --accent2: #00cfff;
+    --warn: #ff9f00;
+    --danger: #ff3c5a;
+    --text: #c8d6e5;
+    --muted: #4a5568;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Barlow Condensed', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  header { margin-bottom: 48px; }
+
+  .logo-line {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .logo {
+    font-family: var(--sans);
+    font-weight: 900;
+    font-size: 52px;
+    letter-spacing: -1px;
+    color: #fff;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .version {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+
+  .tagline {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* Input Panel */
+  .input-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    padding: 28px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .panel-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  textarea {
+    width: 100%;
+    background: #070a0e;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 16px;
+    resize: vertical;
+    min-height: 140px;
+    outline: none;
+    line-height: 1.8;
+    letter-spacing: 0.5px;
+    transition: border-color 0.2s;
+  }
+
+  textarea::placeholder { color: #2a3545; }
+
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(0,255,136,0.1), inset 0 0 20px rgba(0,255,136,0.02);
+  }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn-run {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--accent);
+    border: none;
+    padding: 14px 36px;
+    cursor: pointer;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .btn-run:hover { background: #00ffaa; }
+  .btn-run:active { transform: scale(0.98); }
+  .btn-run:disabled { background: var(--muted); cursor: not-allowed; }
+
+  .btn-clear {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .btn-clear:hover { color: var(--danger); border-color: var(--danger); }
+
+  .timeout-control {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .timeout-control select {
+    background: #070a0e;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 8px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* Scan line */
+  .scan-line {
+    display: none;
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: scan 1.5s linear infinite;
+    top: 0;
+    pointer-events: none;
+  }
+
+  @keyframes scan {
+    from { top: 0; }
+    to   { top: 100%; }
+  }
+
+  .scanning .scan-line { display: block; }
+
+  /* Progress */
+  .progress-bar-wrap {
+    height: 2px;
+    background: var(--border);
+    margin-bottom: 24px;
+    display: none;
+    overflow: hidden;
+  }
+
+  .progress-bar-wrap.active { display: block; }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    width: 0%;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    display: none;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .stats-bar.visible { display: flex; }
+
+  .stat {
+    flex: 1;
+    padding: 14px 20px;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .stat:last-child { border-right: none; }
+
+  .stat-num {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .stat.ok .stat-num      { color: var(--accent); }
+  .stat.blocked .stat-num { color: var(--danger); }
+  .stat.warn .stat-num    { color: var(--warn); }
+  .stat.total .stat-num   { color: var(--accent2); }
+
+  /* Results list */
+  .results-panel { display: none; }
+  .results-panel.visible { display: block; }
+
+  .result-item {
+    display: grid;
+    grid-template-columns: 28px 1fr auto auto;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    animation: slideIn 0.25s ease forwards;
+    opacity: 0;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .result-item:first-child { border-top: 2px solid var(--border); }
+  .result-item:hover { background: #131820; }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin: auto;
+    flex-shrink: 0;
+  }
+
+  .status-dot.ok       { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .status-dot.blocked  { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+  .status-dot.unknown  { background: var(--warn);   box-shadow: 0 0 6px var(--warn); }
+  .status-dot.checking {
+    background: var(--accent2);
+    animation: pulse 0.8s infinite alternate;
+  }
+
+  @keyframes pulse {
+    from { opacity: 0.3; box-shadow: none; }
+    to   { opacity: 1;   box-shadow: 0 0 8px var(--accent2); }
+  }
+
+  .result-url {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  .result-url a { color: inherit; text-decoration: none; }
+  .result-url a:hover { color: var(--accent2); text-decoration: underline; }
+
+  .result-detail {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .result-badge {
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    clip-path: polygon(4px 0%, 100% 0%, calc(100% - 4px) 100%, 0% 100%);
+    white-space: nowrap;
+  }
+
+  .badge-ok       { background: rgba(0,255,136,0.12); color: var(--accent); }
+  .badge-blocked  { background: rgba(255,60,90,0.12);  color: var(--danger); }
+  .badge-unknown  { background: rgba(255,159,0,0.12);  color: var(--warn); }
+  .badge-checking { background: rgba(0,207,255,0.12);  color: var(--accent2); }
+
+  /* ── Reachable Output Panel ── */
+  .output-panel {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    margin-top: 28px;
+    overflow: hidden;
+  }
+
+  .output-panel.visible {
+    display: block;
+    animation: slideIn 0.3s ease forwards;
+  }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--border);
+    background: #0c1015;
+  }
+
+  .output-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .count-badge {
+    background: rgba(0,255,136,0.15);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 10px;
+    letter-spacing: 1px;
+    border: 1px solid rgba(0,255,136,0.2);
+  }
+
+  .output-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn-copy {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--accent);
+    border: none;
+    padding: 9px 18px;
+    cursor: pointer;
+    clip-path: polygon(5px 0%, 100% 0%, calc(100% - 5px) 100%, 0% 100%);
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+    font-weight: bold;
+  }
+
+  .btn-copy:hover { background: #00ffaa; }
+  .btn-copy:active { transform: scale(0.97); }
+
+  .btn-secondary {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: transparent;
+    border: 1px solid rgba(0,255,136,0.35);
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn-secondary:hover { background: rgba(0,255,136,0.07); border-color: var(--accent); }
+
+  .output-body {
+    position: relative;
+    padding: 16px 20px 12px;
+  }
+
+  #reachableOutput {
+    width: 100%;
+    background: #070a0e;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 14px 16px;
+    resize: vertical;
+    min-height: 110px;
+    max-height: 300px;
+    outline: none;
+    line-height: 1.9;
+    letter-spacing: 0.5px;
+    cursor: text;
+    transition: border-color 0.2s;
+  }
+
+  #reachableOutput:focus { border-color: rgba(0,255,136,0.4); }
+
+  .copy-flash {
+    display: none;
+    position: absolute;
+    top: 24px;
+    right: 28px;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    padding: 6px 14px;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  @keyframes flashFade {
+    0%   { opacity: 1; transform: translateY(0); }
+    60%  { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-8px); }
+  }
+
+  .output-meta {
+    padding: 0 20px 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  /* Footer */
+  .footnote {
+    margin-top: 32px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.8;
+    border-left: 2px solid var(--border);
+    padding-left: 16px;
+  }
+
+  .footnote strong { color: #5a6a7e; }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-line">
+      <div class="logo">Site<span>Check</span></div>
+      <div class="version">v2.2</div>
+    </div>
+    <div class="tagline">// network accessibility probe &amp; blocked-site detector</div>
+  </header>
+
+  <!-- Input -->
+  <div class="input-panel" id="inputPanel">
+    <div class="scan-line"></div>
+    <div class="panel-label">Target URLs</div>
+    <textarea id="urlInput" placeholder="google.com&#10;facebook.com&#10;reddit.com&#10;https://example.com&#10;&#10;One URL per line — http(s):// optional"></textarea>
+    <div class="controls">
+      <button class="btn-run" id="runBtn" onclick="runCheck()">▶ &nbsp;Run Probe</button>
+      <button class="btn-clear" onclick="clearAll()">✕ Clear</button>
+      <div class="timeout-control">
+        <span>TIMEOUT</span>
+        <select id="timeoutSel">
+          <option value="3000">3s</option>
+          <option value="5000" selected>5s</option>
+          <option value="8000">8s</option>
+          <option value="12000">12s</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-bar-wrap" id="progressWrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat total">
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat ok">
+      <div class="stat-num" id="statOk">0</div>
+      <div class="stat-label">Reachable</div>
+    </div>
+    <div class="stat blocked">
+      <div class="stat-num" id="statBlocked">0</div>
+      <div class="stat-label">Blocked</div>
+    </div>
+    <div class="stat warn">
+      <div class="stat-num" id="statUnknown">0</div>
+      <div class="stat-label">Unknown</div>
+    </div>
+  </div>
+
+  <!-- Per-site results -->
+  <div class="results-panel" id="resultsPanel"></div>
+
+  <!-- Reachable Output Panel -->
+  <div class="output-panel" id="outputPanel">
+    <div class="output-header">
+      <div class="output-title">
+        ✓ &nbsp;Reachable Sites
+        <span class="count-badge" id="outputCount">0</span>
+      </div>
+      <div class="output-actions">
+        <button class="btn-copy" onclick="copyReachable()">⎘ &nbsp;Copy All URLs</button>
+        <button class="btn-secondary" onclick="copyHostnames()">⎘ &nbsp;Hostnames Only</button>
+      </div>
+    </div>
+    <div class="output-body">
+      <textarea id="reachableOutput" readonly placeholder="Reachable sites will appear here as the probe runs…"></textarea>
+      <div class="copy-flash" id="copyFlash">✓ COPIED</div>
+    </div>
+    <div class="output-meta" id="outputMeta"></div>
+  </div>
+
+  <div class="footnote">
+    <strong>HOW IT WORKS:</strong> Three client-side probes run in parallel — (1) an unsandboxed hidden iframe that browser filter extensions (Lightspeed, GoGuardian, Securly, etc.) can intercept; if the iframe navigates to a <code>chrome-extension://</code> URL, the extension ID is read and identified, (2) a no-cors HEAD fetch to detect network-level timeouts, (3) a script-tag probe that fires when any server responds. No external proxies are used — all detection happens inside your browser, so results accurately reflect what your current extensions and network actually block.
+  </div>
+
+</div>
+<script>
+  function normalizeUrl(raw) {
+    raw = raw.trim();
+    if (!raw) return null;
+    if (!/^https?:\/\//i.test(raw)) raw = 'https://' + raw;
+    try { new URL(raw); return raw; } catch(e) { return null; }
+  }
+
+  function getHostname(url) {
+    try { return new URL(url).hostname; } catch(e) { return url; }
+  }
+
+  let counts        = { total: 0, ok: 0, blocked: 0, unknown: 0 };
+  let resultItems   = {};
+  let reachableUrls = [];
+
+  function setResult(id, status, detail) {
+    const item = resultItems[id];
+    if (!item) return;
+
+    item.querySelector('.status-dot').className   = 'status-dot ' + status;
+    item.querySelector('.result-badge').className = 'result-badge badge-' + status;
+
+    const labels = { ok: 'REACHABLE', blocked: 'BLOCKED', unknown: 'UNKNOWN', checking: 'CHECKING…' };
+    item.querySelector('.result-badge').textContent  = labels[status] || status;
+    item.querySelector('.result-detail').textContent = detail || '';
+
+    if (status !== 'checking') {
+      counts[status]++;
+      document.getElementById('statOk').textContent      = counts.ok;
+      document.getElementById('statBlocked').textContent = counts.blocked;
+      document.getElementById('statUnknown').textContent = counts.unknown;
+
+      if (status === 'ok') {
+        reachableUrls.push(id);
+        refreshOutputPanel();
+      }
+    }
+  }
+
+  function refreshOutputPanel() {
+    const n = reachableUrls.length;
+    document.getElementById('outputPanel').classList.add('visible');
+    document.getElementById('reachableOutput').value  = reachableUrls.join('\n');
+    document.getElementById('outputCount').textContent = n;
+    document.getElementById('outputMeta').textContent  =
+      `${n} reachable URL${n !== 1 ? 's' : ''} · one per line · you can edit before copying`;
+  }
+
+  function showFlash(msg) {
+    const flash = document.getElementById('copyFlash');
+    flash.textContent = msg;
+    flash.style.display = 'block';
+    flash.style.animation = 'none';
+    void flash.offsetWidth;
+    flash.style.animation = 'flashFade 1.4s ease forwards';
+    setTimeout(() => { flash.style.display = 'none'; }, 1500);
+  }
+
+  function copyReachable() {
+    const text = document.getElementById('reachableOutput').value.trim();
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => showFlash('✓ COPIED'));
+  }
+
+  function copyHostnames() {
+    const lines = document.getElementById('reachableOutput').value.trim().split('\n').filter(Boolean);
+    const out   = lines.map(u => { try { return new URL(u.trim()).hostname; } catch(e) { return u.trim(); } }).join('\n');
+    if (!out) return;
+    navigator.clipboard.writeText(out).then(() => showFlash('✓ HOSTNAMES COPIED'));
+  }
+
+  /* ── Known filter extension IDs ── */
+  // When these extensions block a page, the iframe/navigation ends up at chrome-extension://<ID>/...
+  const KNOWN_FILTER_EXTENSIONS = [
+    { id: 'ehnniokiiebpinnfegpkdlcamgdcaaje', name: 'Lightspeed' },
+    { id: 'iheobagjkfklnlikgihanlhcddjoihkg', name: 'Securly' },
+    { id: 'adkcpkggeihhaeajcpokfmaklbohagoi', name: 'Securly' },
+    { id: 'bnonnlpingklaggdalihppicgpaghpop', name: 'GoGuardian' },
+    { id: 'haldlgldplgnggkjaafhelgiaglafanh', name: 'GoGuardian' },
+    { id: 'jcdhmojfecjfmbdpchihbeilohgnbdci', name: 'ContentKeeper' },
+    { id: 'enkfagoaeflkjnnjkhocglpmppmfliia', name: 'Cisco Umbrella' },
+  ];
+
+  const KNOWN_FILTER_EXT_IDS = new Set(KNOWN_FILTER_EXTENSIONS.map(e => e.id));
+
+  function getExtensionName(id) {
+    return KNOWN_FILTER_EXTENSIONS.find(e => e.id === id)?.name || 'filter extension';
+  }
+
+  /* ── Probe 1: iframe navigation trap ──
+     Load the URL in an unsandboxed hidden iframe so browser extensions CAN intercept it.
+     On load, attempt to read contentWindow.location.href:
+       - chrome-extension:// URL → blocked by extension
+       - cross-origin SecurityError → real site loaded (reachable)
+     We also measure load time: extension block pages load in <150ms (local),
+     real remote sites take longer. Used as a secondary signal only. */
+  function probeIframe(url, timeout) {
+    return new Promise(resolve => {
+      const t0    = performance.now();
+      const frame = document.createElement('iframe');
+      frame.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;top:-9999px;left:-9999px';
+      // NO sandbox — extensions must be able to intercept
+
+      const done = (status, detail, extra) => {
+        clearTimeout(timer);
+        frame.onload = frame.onerror = null;
+        try { document.body.removeChild(frame); } catch(e) {}
+        resolve({ status, detail, ...extra });
+      };
+
+      const timer = setTimeout(() => done('blocked', 'iframe: timed out (no response)'), timeout);
+
+      frame.onload = () => {
+        const ms = Math.round(performance.now() - t0);
+        try {
+          const loc = frame.contentWindow.location.href;
+          // We CAN read the URL — only possible if same-origin or extension page
+          if (loc.startsWith('chrome-extension://')) {
+            const extId   = loc.split('/')[2];
+            const extName = getExtensionName(extId);
+            return done('blocked', `blocked by ${extName} extension`, { extId });
+          }
+          if (loc === 'about:blank') {
+            // Iframe hasn't navigated yet — wait a bit
+            return setTimeout(() => {
+              try {
+                const loc2 = frame.contentWindow.location.href;
+                if (loc2.startsWith('chrome-extension://')) {
+                  const extId = loc2.split('/')[2];
+                  return done('blocked', `blocked by ${getExtensionName(extId)} extension`, { extId });
+                }
+              } catch(e2) {}
+              done('ok', `iframe loaded in ${ms}ms`);
+            }, 200);
+          }
+          done('ok', `iframe loaded in ${ms}ms`);
+        } catch(e) {
+          // SecurityError reading cross-origin location = real site responded
+          done('ok', `cross-origin response in ${ms}ms`);
+        }
+      };
+
+      frame.onerror = () => done('unknown', 'iframe: load error');
+      frame.src = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+      document.body.appendChild(frame);
+    });
+  }
+
+  /* ── Probe 2: direct no-cors fetch ──
+     A server responding (even with error) = reachable.
+     AbortError = timed out. Other errors = unknown (NOT blocked). */
+  function probeFetch(url, timeout) {
+    const ctrl  = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeout);
+    const t0    = performance.now();
+    return fetch(url, { method: 'HEAD', mode: 'no-cors', signal: ctrl.signal, cache: 'no-store', redirect: 'follow' })
+      .then(() => { clearTimeout(timer); return { status: 'ok', detail: `fetch: responded in ${Math.round(performance.now()-t0)}ms` }; })
+      .catch(err => {
+        clearTimeout(timer);
+        if (err.name === 'AbortError') return { status: 'blocked', detail: 'fetch: timed out' };
+        return { status: 'unknown', detail: 'fetch: network error (CORS or unreachable)' };
+      });
+  }
+
+  /* ── Probe 3: script tag ──
+     onerror fires when a server responds (even non-JS). Timeout = no response. */
+  function probeScript(url, timeout) {
+    return new Promise(resolve => {
+      const t0     = performance.now();
+      const el     = document.createElement('script');
+      const done   = (status, detail) => {
+        clearTimeout(timer);
+        el.onload = el.onerror = null;
+        try { if (el.parentNode) el.parentNode.removeChild(el); } catch(e) {}
+        resolve({ status, detail });
+      };
+      const timer  = setTimeout(() => done('blocked', 'script: timed out'), timeout);
+      el.onerror   = () => done('ok', `script: server responded in ${Math.round(performance.now()-t0)}ms`);
+      el.onload    = () => done('ok', `script: loaded in ${Math.round(performance.now()-t0)}ms`);
+      el.src       = url + (url.includes('?') ? '&' : '?') + '_s=' + Date.now();
+      (document.head || document.body).appendChild(el);
+    });
+  }
+
+  /* ── Main decision logic ── */
+  async function checkSite(url, timeout) {
+    const [iframeRes, fetchRes, scriptRes] = await Promise.all([
+      probeIframe(url, timeout),
+      probeFetch(url, timeout),
+      probeScript(url, timeout),
+    ]);
+
+    // Extension interception is definitive — trust it immediately
+    if (iframeRes.detail && iframeRes.detail.includes('extension')) {
+      return { status: 'blocked', detail: iframeRes.detail };
+    }
+
+    // Any confirmed reachable signal wins
+    if (iframeRes.status === 'ok')  return { status: 'ok', detail: iframeRes.detail };
+    if (fetchRes.status === 'ok')   return { status: 'ok', detail: fetchRes.detail };
+    if (scriptRes.status === 'ok')  return { status: 'ok', detail: scriptRes.detail };
+
+    // Count hard timeouts across all three probes
+    const timeouts = [iframeRes, fetchRes, scriptRes].filter(r => r.status === 'blocked').length;
+    if (timeouts >= 2) return { status: 'blocked', detail: `${timeouts}/3 probes timed out — blocked or down` };
+
+    return { status: 'unknown', detail: 'no definitive response' };
+  }
+
+  /* ── Main runner ── */
+  async function runCheck() {
+    const raw     = document.getElementById('urlInput').value;
+    const timeout = parseInt(document.getElementById('timeoutSel').value);
+    const urls    = raw.split('\n').map(normalizeUrl).filter(Boolean);
+
+    if (!urls.length) {
+      const ta = document.getElementById('urlInput');
+      ta.style.borderColor = 'var(--danger)';
+      setTimeout(() => ta.style.borderColor = '', 1000);
+      return;
+    }
+
+    // Reset
+    counts        = { total: urls.length, ok: 0, blocked: 0, unknown: 0 };
+    resultItems   = {};
+    reachableUrls = [];
+
+    ['statTotal','statOk','statBlocked','statUnknown'].forEach((id, i) => {
+      document.getElementById(id).textContent = i === 0 ? urls.length : 0;
+    });
+
+    document.getElementById('outputPanel').classList.remove('visible');
+    document.getElementById('reachableOutput').value    = '';
+    document.getElementById('outputCount').textContent  = 0;
+    document.getElementById('statsBar').classList.add('visible');
+    document.getElementById('resultsPanel').classList.add('visible');
+    document.getElementById('resultsPanel').innerHTML   = '';
+    document.getElementById('progressWrap').classList.add('active');
+    document.getElementById('progressBar').style.width  = '0%';
+    document.getElementById('inputPanel').classList.add('scanning');
+    document.getElementById('runBtn').disabled = true;
+
+    urls.forEach((url, i) => {
+      const item = document.createElement('div');
+      item.className = 'result-item';
+      item.style.animationDelay = `${i * 30}ms`;
+      item.innerHTML = `
+        <div class="status-dot checking"></div>
+        <div class="result-url"><a href="${url}" target="_blank" rel="noopener">${getHostname(url)}</a></div>
+        <div class="result-detail">probing…</div>
+        <div class="result-badge badge-checking">CHECKING…</div>
+      `;
+      document.getElementById('resultsPanel').appendChild(item);
+      resultItems[url] = item;
+    });
+
+    const CONCURRENCY = 6;
+    let completed = 0;
+
+    async function processUrl(url) {
+      const r = await checkSite(url, timeout);
+      setResult(url, r.status, r.detail);
+      document.getElementById('progressBar').style.width = `${(++completed / urls.length) * 100}%`;
+    }
+
+    for (let i = 0; i < urls.length; i += CONCURRENCY)
+      await Promise.all(urls.slice(i, i + CONCURRENCY).map(processUrl));
+
+    document.getElementById('inputPanel').classList.remove('scanning');
+    document.getElementById('runBtn').disabled = false;
+    setTimeout(() => document.getElementById('progressWrap').classList.remove('active'), 800);
+  }
+
+  function clearAll() {
+    document.getElementById('urlInput').value = '';
+    document.getElementById('resultsPanel').innerHTML = '';
+    document.getElementById('resultsPanel').classList.remove('visible');
+    document.getElementById('statsBar').classList.remove('visible');
+    document.getElementById('outputPanel').classList.remove('visible');
+    document.getElementById('progressWrap').classList.remove('active');
+    counts = { total: 0, ok: 0, blocked: 0, unknown: 0 };
+    reachableUrls = [];
+  }
+
+  document.getElementById('urlInput').addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runCheck();
+  });
+</script>
+</body>
+</html>
